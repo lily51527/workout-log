@@ -18,11 +18,13 @@ import androidx.navigation.compose.rememberNavController
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import dagger.hilt.android.AndroidEntryPoint
 import idv.wennyli.workoutlog.ui.navigation.MainNavHost
 import idv.wennyli.workoutlog.ui.navigation.Screen
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     @Inject
     lateinit var auth: FirebaseAuth

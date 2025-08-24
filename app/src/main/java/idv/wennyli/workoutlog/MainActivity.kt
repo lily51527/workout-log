@@ -41,23 +41,15 @@ class MainActivity : ComponentActivity() {
                     val navController = rememberNavController()
 
                     // 判斷起始畫面：如果使用者已登入，直接進入主畫面，否則顯示登入畫面
-//                    val startDestination = if (auth.currentUser != null) {
-//                        Screen.WorkoutLog.route
-//                    } else {
-//                        Screen.Login.route
-//                    }
+                    val startDestination = if (auth.currentUser != null) {
+                        Screen.Main.route
+                    } else {
+                        Screen.Login.route
+                    }
 
-                    MainNavHost(navController = navController, startDestination = Screen.Login.route)
+                    MainNavHost(navController = navController, startDestination = startDestination)
                 }
             }
         }
     }
 }
-
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    WorkoutLogTheme {
-//
-//    }
-//}

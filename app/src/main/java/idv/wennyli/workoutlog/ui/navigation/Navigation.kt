@@ -5,11 +5,11 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import idv.wennyli.workoutlog.ui.view.Login
+import idv.wennyli.workoutlog.ui.view.Main
 
 sealed class Screen(val route: String) {
     object Login : Screen("login_screen")
-    object WorkoutLog : Screen("workout_log_screen")
-    object Timer : Screen("timer_screen")
+    object Main : Screen("main_screen")
 }
 
 @Composable
@@ -21,11 +21,8 @@ fun MainNavHost(
         composable(Screen.Login.route) {
             Login(navController)
         }
-        composable(Screen.WorkoutLog.route) {
-
-        }
-        composable(Screen.Timer.route) {
-
+        composable(Screen.Main.route) {
+            Main(navController)
         }
     }
 }

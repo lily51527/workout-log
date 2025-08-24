@@ -25,11 +25,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import idv.wennyli.workoutlog.ui.viewmodel.AuthState
 import idv.wennyli.workoutlog.ui.viewmodel.AuthViewModel
@@ -83,13 +85,16 @@ fun LoginScreen(
             verticalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxSize()
         ) {
-            Text("歡迎回來", style = MaterialTheme.typography.headlineMedium)
+            Text(
+                text = stringResource(R.string.login_welcome),
+                style = MaterialTheme.typography.headlineMedium
+            )
             Spacer(modifier = Modifier.height(32.dp))
 
             OutlinedTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                label = { Text("電子郵件") },
+                label = { Text(stringResource(R.string.login_email)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                 singleLine = true
@@ -99,7 +104,7 @@ fun LoginScreen(
             OutlinedTextField(
                 value = password,
                 onValueChange = onPasswordChange,
-                label = { Text("密碼") },
+                label = { Text(stringResource(R.string.login_password)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                 singleLine = true
@@ -114,7 +119,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = email.isNotBlank() && password.isNotBlank()
                 ) {
-                    Text("登入")
+                    Text(stringResource(R.string.login_login_button))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -123,14 +128,14 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = email.isNotBlank() && password.isNotBlank()
                 ) {
-                    Text("註冊新帳號")
+                    Text(stringResource(R.string.login_register))
                 }
                 Spacer(modifier = Modifier.height(8.dp))
 
                 TextButton(
                     onClick = onLoginAnonymouslyClick
                 ) {
-                    Text("或使用匿名登入")
+                    Text(stringResource(R.string.login_login_anonymously))
                 }
             }
 

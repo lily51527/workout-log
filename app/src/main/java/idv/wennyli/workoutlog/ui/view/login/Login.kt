@@ -1,4 +1,4 @@
-package idv.wennyli.workoutlog.ui.view
+package idv.wennyli.workoutlog.ui.view.login
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,8 +32,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
-import idv.wennyli.workoutlog.ui.viewmodel.AuthState
-import idv.wennyli.workoutlog.ui.viewmodel.AuthViewModel
 
 @Composable
 fun Login(

@@ -1,4 +1,4 @@
-package idv.wennyli.workoutlog.ui.viewmodel
+package idv.wennyli.workoutlog.ui.view.login
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
@@ -34,6 +34,7 @@ class AuthViewModel @Inject constructor(
         _authState.value = AuthState.Idle
     }
 
+    // TODO: 需要將 hardcode 文字轉到 strings.xml 中
     fun registerWithEmail(email: String, password: String) {
         viewModelScope.launch {
             try {

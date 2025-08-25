@@ -4,7 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import idv.wennyli.workoutlog.ui.view.Login
+import idv.wennyli.workoutlog.ui.view.login.Login
 import idv.wennyli.workoutlog.ui.view.Main
 
 sealed class Screen(val route: String) {

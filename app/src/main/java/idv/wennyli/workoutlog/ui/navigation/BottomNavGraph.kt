@@ -6,6 +6,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import idv.wennyli.workoutlog.R
+import idv.wennyli.workoutlog.ui.view.Settings
+import idv.wennyli.workoutlog.ui.view.Timer
+import idv.wennyli.workoutlog.ui.view.WorkoutLog
 
 // 定義底部導覽項目
 sealed class BottomNavItem(val route: String, val iconId: Int, val labelId: Int) {
@@ -40,13 +43,13 @@ fun BottomNavGraph(
         modifier = modifier
     ) {
         composable(BottomNavItem.Log.route) {
-
+            WorkoutLog()
         }
         composable(BottomNavItem.Timer.route) {
-
+            Timer()
         }
         composable(BottomNavItem.Settings.route) {
-
+            Settings()
         }
     }
 }

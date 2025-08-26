@@ -12,4 +12,11 @@
     <string name="mian_screen_timer">計時器</string>
     <string name="mian_screen_settings">設定</string>
     <string name="main_screen_logout">登出</string>
+
+    <string name="settings_profile_title">個人資料</string>
+    <string name="settings_gender_title">生理性別</string>
+    <string name="settings_birthdate_title">出生年月日</string>
+    <string name="settings_gender_male">男性</string>
+    <string name="settings_gender_female">女性</string>
+    <string name="settings_gender_other">不指定</string>
 </resources>

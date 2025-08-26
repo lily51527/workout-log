@@ -9,8 +9,6 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import idv.wennyli.workoutlog.data.repository.WorkoutRepository
-import idv.wennyli.workoutlog.data.repository.WorkoutRepositoryImpl
 import javax.inject.Singleton
 
 @Module
@@ -25,10 +23,4 @@ object AppModule {
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore = Firebase.firestore
 
-//    @Provides
-//    @Singleton
-//    fun provideWorkoutRepository(
-//        auth: FirebaseAuth,
-//        firestore: FirebaseFirestore
-//    ): WorkoutRepository = WorkoutRepositoryImpl(auth, firestore)
 }

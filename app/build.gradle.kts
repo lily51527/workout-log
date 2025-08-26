@@ -22,19 +22,12 @@ android {
     }
 
     buildTypes {
-        debug {
-            // Debug 版本使用的 App ID
-            buildConfigField("String", "APP_ID", "\"workout-log-debug\"")
-        }
-
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Release 版本使用的 App ID
-            buildConfigField("String", "APP_ID", "\"workout-log-release\"")
         }
     }
     compileOptions {
@@ -46,7 +39,6 @@ android {
     }
     buildFeatures {
         compose = true
-        buildConfig = true
     }
 }
 
@@ -84,16 +76,4 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
-
-    // Coroutines testing
-    testImplementation(libs.kotlinx.coroutines.test)
-
-    // Mocking framework (MockK 是 Kotlin 友好的)
-    testImplementation(libs.mockk)
-
-    // For assertions (optional, but good for more readable assertions)
-    testImplementation(libs.truth)
-
-    // Turbine for testing Flows
-    testImplementation(libs.turbine)
 }

@@ -59,7 +59,7 @@ fun Main(mainNavController: NavController) {
                             }
                         }) {
                             Icon(
-                                painter = painterResource(R.drawable.outline_logout_8),
+                                painter = painterResource(R.drawable.outline_logout_24),
                                 contentDescription = stringResource(R.string.main_screen_logout)
                             )
                         }

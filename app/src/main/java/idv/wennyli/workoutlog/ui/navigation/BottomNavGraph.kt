@@ -6,7 +6,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import idv.wennyli.workoutlog.R
-import idv.wennyli.workoutlog.ui.view.Settings
+import idv.wennyli.workoutlog.ui.view.settings.Settings
 import idv.wennyli.workoutlog.ui.view.Timer
 import idv.wennyli.workoutlog.ui.view.WorkoutLog
 
@@ -14,20 +14,20 @@ import idv.wennyli.workoutlog.ui.view.WorkoutLog
 sealed class BottomNavItem(val route: String, val iconId: Int, val labelId: Int) {
     object Log : BottomNavItem(
         "workout_log_screen",
-        R.drawable.outline_edit_document_8,
+        R.drawable.outline_edit_document_24,
         R.string.mian_screen_workout_record
     )
 
     object Timer : BottomNavItem(
         "timer_screen",
-        R.drawable.outline_timer_8,
+        R.drawable.outline_timer_24,
         R.string.mian_screen_timer
     )
 
     object Settings :
         BottomNavItem(
             "settings_screen",
-            R.drawable.baseline_settings_8,
+            R.drawable.outline_settings_24,
             R.string.mian_screen_settings
         )
 }

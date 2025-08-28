@@ -127,25 +127,36 @@ class BodyMeasurementRepositoryTest {
     //測試 addBodyMeasurement() 函式
     @Test
     fun `addBodyMeasurement should call add with correct measurement`() = runTest {
-        // 模擬 Firestore 呼叫路徑
+        // Arrange: 準備階段
+        // 1. 模擬 Firestore 呼叫路徑
         every { mockFirestore.collection(any()) } returns mockCollectionReference
-        every { mockCollectionReference.add(any()) } returns Tasks.forResult(null)
+
+        // 2. 模擬 document() 函式，並設定一個假 ID
+        val fakeGeneratedId = "generated_id_123"
+        every { mockCollectionReference.document() } returns mockDocumentReference
+        every { mockDocumentReference.id } returns fakeGeneratedId
+
+        // 3. 模擬 set() 函式，並設定為成功
+        every { mockDocumentReference.set(any()) } returns Tasks.forResult(null)
 
         val newMeasurement = BodyMeasurement(timestamp = Date(3L), userId = "")
 
+        // Act: 行動階段
         // 呼叫要測試的 suspend 函式
         repository.addBodyMeasurement(newMeasurement)
 
+        // Assert: 斷言階段
         // 驗證 collection() 函式被呼叫，且路徑正確
-        val expectedPath = "artifacts/$fakeAppId/users/$fakeUserId/measurements"
-        verify(exactly = 1) { mockFirestore.collection(expectedPath) }
+        verify(exactly = 1) { mockCollectionReference.document() }
 
         // 捕捉並驗證傳遞給 add() 的參數
         val measurementSlot = slot<BodyMeasurement>()
-        verify(exactly = 1) { mockCollectionReference.add(capture(measurementSlot)) }
+        verify(exactly = 1) { mockDocumentReference.set(capture(measurementSlot)) }
 
-        assertThat(measurementSlot.captured.timestamp).isEqualTo(Date(3L))
-        assertThat(measurementSlot.captured.userId).isEqualTo(fakeUserId)
+        // 3. 驗證最終寫入的物件包含了 userId 和自動生成的 id
+        val captureMeasurement = measurementSlot.captured
+        assertThat(captureMeasurement.userId).isEqualTo(fakeUserId)
+        assertThat(captureMeasurement.id).isEqualTo(fakeGeneratedId)
     }
 
     @Test

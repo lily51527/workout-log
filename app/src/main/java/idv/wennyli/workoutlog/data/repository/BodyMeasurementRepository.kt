@@ -50,9 +50,13 @@ class BodyMeasurementRepositoryImpl @Inject constructor(
 
     override suspend fun addBodyMeasurement(measurement: BodyMeasurement) {
         userId?.let {
-            val measurementWithUserId = measurement.copy(userId = it)
             val collectionPath = "artifacts/$appId/users/$it/measurements"
-            firestore.collection(collectionPath).add(measurementWithUserId).await()
+            // 1. 建立一個帶有自動產生 ID 的新文件參照
+            val newMeasurementRef = firestore.collection(collectionPath).document()
+            // 2. 將自動產生的 ID 和 userId 複製到您的物件中
+            val finalMeasurement = measurement.copy(id = newMeasurementRef.id, userId = it)
+            // 3. 使用 set 方法將帶有 ID 的物件寫入該文件
+            newMeasurementRef.set(finalMeasurement).await()
         }
     }
 

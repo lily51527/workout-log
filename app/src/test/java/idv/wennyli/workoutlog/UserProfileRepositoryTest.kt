@@ -1,7 +1,6 @@
 package idv.wennyli.workoutlog
 
 import app.cash.turbine.test
-import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.FirebaseAuth
@@ -118,7 +117,6 @@ class UserProfileRepositoryTest {
         every { mockFirestore.document(any()) } returns mockDocumentReference
 
         // 模擬 set() 函式，並設定為成功
-//        val mockTask: Task<Void> = mockk(relaxed = true) // relaxed = true 讓不需要特別設定的函式自動回傳預設值
         every { mockDocumentReference.set(any()) } returns Tasks.forResult(null)
 
         val fakeUserProfile = UserProfile("Updated Name", "updated@email.com")

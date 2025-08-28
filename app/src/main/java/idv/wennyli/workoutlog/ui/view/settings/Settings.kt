@@ -152,14 +152,12 @@ private fun SettingsScreen(
                 }
             }
         } else {
-//                LazyColumn {
             items(measurementList, key = { it.id }) { measurement ->
                 MeasurementItem(
                     measurement = measurement,
                     onDelete = onMeasurementDelete
                 )
             }
-//                }
         }
     }
 

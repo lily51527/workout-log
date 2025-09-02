@@ -60,80 +60,14 @@ fun WorkoutLog(
     val error by viewModel.error.collectAsState()
     val currentDate by viewModel.currentDate.collectAsState()
 
-    var addWorkoutDate by remember {
-        mutableStateOf(
-            SimpleDateFormat(
-                "yyyy-MM-dd",
-                Locale.US
-            ).format(Date())
-        )
-    }
-    var exercise by remember { mutableStateOf("") }
-    var muscleGroup by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
-    var sets by remember { mutableStateOf("") }
-    var reps by remember { mutableStateOf("") }
-    var repsUnit by remember { mutableStateOf("次數") }
-    var muscleFeel by remember { mutableIntStateOf(3) }
-    var control by remember { mutableIntStateOf(3) }
-    var notes by remember { mutableStateOf("") }
-
-    var exerciseInputExpanded by remember { mutableStateOf(false) }
-    var repsUnitExpanded by remember { mutableStateOf(false) }
-
-    val exerciseToMuscleKeyList = viewModel.exerciseToMuscleMap.keys.toList()
-    val filteredSuggestions = exerciseToMuscleKeyList.filter {
-        it.contains(
-            exercise,
-            ignoreCase = true
-        ) && it.isNotBlank()
-    }
-
     var showAddWorkoutDialog by remember { mutableStateOf(false) }
-
-    LaunchedEffect(exercise) {
-        muscleGroup = viewModel.exerciseToMuscleMap[exercise] ?: ""
-    }
-
-    val addWorkoutDialogState = AddWorkoutDialogState(
-        date = addWorkoutDate,
-        exercise = exercise,
-        muscleGroup = muscleGroup,
-        weight = weight,
-        sets = sets,
-        reps = reps,
-        repsUnit = repsUnit,
-        muscleFeel = muscleFeel,
-        control = control,
-        notes = notes,
-        exerciseInputExpanded = exerciseInputExpanded,
-        repsUnitExpanded = repsUnitExpanded,
-        filteredSuggestions = filteredSuggestions
-    )
-
-    val addWorkoutDialogEvents = AddWorkoutDialogEvents(
-        onDateChange = { addWorkoutDate = it },
-        onExerciseChange = { exercise = it },
-        onExerciseExpandedChange = { exerciseInputExpanded = it },
-        onRepsUnitExpandedChange = { repsUnitExpanded = it },
-        onMuscleGroupChange = { muscleGroup = it },
-        onWeightChange = { weight = it },
-        onSetsChange = { sets = it },
-        onRepsChange = { reps = it },
-        onMuscleFeelChange = { muscleFeel = it },
-        onControlChange = { control = it },
-        onNotesChange = { notes = it },
-        onUnitSelected = { repsUnit = it },
-        onDismiss = { showAddWorkoutDialog = false },
-        onAddWorkout = { viewModel.addWorkout(it) }
-    )
 
     WorkoutLogScreen(
         workoutList = workoutList,
         loading = loading,
         showAddWorkoutDialog = showAddWorkoutDialog,
-        addWorkoutState = addWorkoutDialogState,
-        addWorkoutDialogEvents = addWorkoutDialogEvents,
+        onAddWorkout = { viewModel.addWorkout(it) },
+        exerciseToMuscleMap = viewModel.exerciseToMuscleMap,
         error = error,
         currentDate = currentDate,
         onDateSelected = { viewModel.setCurrentDate(it) },
@@ -148,8 +82,8 @@ private fun WorkoutLogScreen(
     workoutList: List<Workout>,
     loading: Boolean,
     showAddWorkoutDialog: Boolean,
-    addWorkoutState: AddWorkoutDialogState,
-    addWorkoutDialogEvents: AddWorkoutDialogEvents,
+    onAddWorkout: (Workout) -> Unit,
+    exerciseToMuscleMap: Map<String, String>,
     error: String?,
     currentDate: String,
     onDateSelected: (String) -> Unit,
@@ -189,8 +123,9 @@ private fun WorkoutLogScreen(
 
         if (showAddWorkoutDialog) {
             AddWorkoutDialog(
-                state = addWorkoutState,
-                events = addWorkoutDialogEvents
+                onDismiss = { onShowAddWorkoutDialog(false) },
+                onAddWorkout = onAddWorkout,
+                exerciseToMuscleMap = exerciseToMuscleMap
             )
         }
 
@@ -385,45 +320,12 @@ private fun WorkoutListPreview() {
 @Composable
 private fun WorkoutLogScreenPreview() {
     WorkoutLogTheme {
-        val state = AddWorkoutDialogState(
-            date = "2023-08-01",
-            exercise = "引體向上",
-            muscleGroup = "三角肌 (前束)",
-            weight = "10.0",
-            sets = "3",
-            reps = "8",
-            repsUnit = "次",
-            muscleFeel = 3,
-            control = 3,
-            notes = "remark",
-            exerciseInputExpanded = false,
-            repsUnitExpanded = false,
-            filteredSuggestions = emptyList()
-        )
-
-        val events = AddWorkoutDialogEvents(
-            onDateChange = {},
-            onExerciseChange = {},
-            onExerciseExpandedChange = {},
-            onRepsUnitExpandedChange = {},
-            onMuscleGroupChange = {},
-            onWeightChange = {},
-            onSetsChange = {},
-            onRepsChange = {},
-            onUnitSelected = {},
-            onMuscleFeelChange = {},
-            onControlChange = {},
-            onNotesChange = {},
-            onDismiss = {},
-            onAddWorkout = {}
-        )
-
         WorkoutLogScreen(
             workoutList = emptyList(),
             loading = false,
             showAddWorkoutDialog = false,
-            addWorkoutState = state,
-            addWorkoutDialogEvents = events,
+            onAddWorkout = {},
+            exerciseToMuscleMap = emptyMap(),
             error = null,
             currentDate = "2023-08-01",
             onDateSelected = {},

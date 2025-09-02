@@ -26,6 +26,12 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
@@ -33,78 +39,105 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import idv.wennyli.workoutlog.data.model.Workout
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
-
-data class AddWorkoutDialogState(
-    val date: String,
-    val exercise: String,
-    val muscleGroup: String,
-    val weight: String,
-    val sets: String,
-    val reps: String,
-    val repsUnit: String,
-    val muscleFeel: Int,
-    val control: Int,
-    val notes: String,
-    val exerciseInputExpanded: Boolean,
-    val repsUnitExpanded: Boolean,
-    val filteredSuggestions: List<String>
-)
-
-data class AddWorkoutDialogEvents(
-    val onDateChange: (String) -> Unit,
-    val onExerciseChange: (String) -> Unit,
-    val onExerciseExpandedChange: (Boolean) -> Unit,
-    val onRepsUnitExpandedChange: (Boolean) -> Unit,
-    val onMuscleGroupChange: (String) -> Unit,
-    val onWeightChange: (String) -> Unit,
-    val onSetsChange: (String) -> Unit,
-    val onRepsChange: (String) -> Unit,
-    val onMuscleFeelChange: (Int) -> Unit,
-    val onControlChange: (Int) -> Unit,
-    val onNotesChange: (String) -> Unit,
-    val onUnitSelected: (String) -> Unit,
-    val onDismiss: () -> Unit,
-    val onAddWorkout: (Workout) -> Unit
-)
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun AddWorkoutDialog(
-    state: AddWorkoutDialogState,
-    events: AddWorkoutDialogEvents
+    onDismiss: () -> Unit,
+    onAddWorkout: (Workout) -> Unit,
+    exerciseToMuscleMap: Map<String, String>
 ) {
+    var addWorkoutDate by remember {
+        mutableStateOf(
+            SimpleDateFormat(
+                "yyyy-MM-dd",
+                Locale.US
+            ).format(Date())
+        )
+    }
+    var exercise by remember { mutableStateOf("") }
+    var muscleGroup by remember { mutableStateOf("") }
+    var weight by remember { mutableStateOf("") }
+    var sets by remember { mutableStateOf("") }
+    var reps by remember { mutableStateOf("") }
+    var repsUnit by remember { mutableStateOf("次數") }
+    var muscleFeel by remember { mutableIntStateOf(3) }
+    var control by remember { mutableIntStateOf(3) }
+    var notes by remember { mutableStateOf("") }
+
+    var exerciseInputExpanded by remember { mutableStateOf(false) }
+    var repsUnitExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(exercise) {
+        muscleGroup = exerciseToMuscleMap[exercise] ?: ""
+    }
+
+    val exerciseToMuscleKeyList = exerciseToMuscleMap.keys.toList()
+    val filteredSuggestions = exerciseToMuscleKeyList.filter {
+        it.contains(
+            exercise,
+            ignoreCase = true
+        ) && it.isNotBlank()
+    }
+
     AlertDialog(
-        onDismissRequest = events.onDismiss,
+        onDismissRequest = onDismiss,
         title = { Text("新增訓練記錄") },
         text = {
             AddWorkoutDialogContent(
-                state = state,
-                events = events
+                date = addWorkoutDate,
+                exercise = exercise,
+                muscleGroup = muscleGroup,
+                weight = weight,
+                sets = sets,
+                reps = reps,
+                repsUnit = repsUnit,
+                muscleFeel = muscleFeel,
+                control = control,
+                notes = notes,
+                exerciseInputExpanded = exerciseInputExpanded,
+                repsUnitExpanded = repsUnitExpanded,
+                filteredSuggestions = filteredSuggestions,
+                onDateChange = { addWorkoutDate = it },
+                onExerciseChange = { exercise = it },
+                onExerciseExpandedChange = { exerciseInputExpanded = it },
+                onRepsUnitExpandedChange = { repsUnitExpanded = it },
+                onMuscleGroupChange = { muscleGroup = it },
+                onWeightChange = { weight = it },
+                onSetsChange = { sets = it },
+                onRepsChange = { reps = it },
+                onMuscleFeelChange = { muscleFeel = it },
+                onControlChange = { control = it },
+                onNotesChange = { notes = it },
+                onUnitSelected = { repsUnit = it }
             )
         },
         confirmButton = {
             Button(
                 onClick = {
                     val newWorkout = Workout(
-                        date = state.date,
-                        exercise = state.exercise,
-                        muscleGroup = state.muscleGroup,
-                        weight = state.weight.toDoubleOrNull() ?: 0.0,
-                        sets = state.sets.toIntOrNull() ?: 0,
-                        reps = state.reps.toIntOrNull() ?: 0,
-                        repsUnit = state.repsUnit,
-                        muscleFeel = state.muscleFeel,
-                        control = state.control,
-                        notes = state.notes
+                        date = addWorkoutDate,
+                        exercise = exercise,
+                        muscleGroup = muscleGroup,
+                        weight = weight.toDoubleOrNull() ?: 0.0,
+                        sets = sets.toIntOrNull() ?: 0,
+                        reps = reps.toIntOrNull() ?: 0,
+                        repsUnit = repsUnit,
+                        muscleFeel = muscleFeel,
+                        control = control,
+                        notes = notes
                     )
-                    events.onAddWorkout(newWorkout)
-                    events.onDismiss()
+                    onAddWorkout(newWorkout)
+                    onDismiss()
                 }
             ) {
                 Text("新增")
             }
         },
         dismissButton = {
-            Button(onClick = events.onDismiss) {
+            Button(onClick = onDismiss) {
                 Text("取消")
             }
         }
@@ -113,38 +146,61 @@ fun AddWorkoutDialog(
 
 @Composable
 private fun AddWorkoutDialogContent(
-    state: AddWorkoutDialogState,
-    events: AddWorkoutDialogEvents
+    date: String,
+    exercise: String,
+    muscleGroup: String,
+    weight: String,
+    sets: String,
+    reps: String,
+    repsUnit: String,
+    muscleFeel: Int,
+    control: Int,
+    notes: String,
+    exerciseInputExpanded: Boolean,
+    repsUnitExpanded: Boolean,
+    filteredSuggestions: List<String>,
+    onDateChange: (String) -> Unit,
+    onExerciseChange: (String) -> Unit,
+    onExerciseExpandedChange: (Boolean) -> Unit,
+    onRepsUnitExpandedChange: (Boolean) -> Unit,
+    onMuscleGroupChange: (String) -> Unit,
+    onWeightChange: (String) -> Unit,
+    onSetsChange: (String) -> Unit,
+    onRepsChange: (String) -> Unit,
+    onMuscleFeelChange: (Int) -> Unit,
+    onControlChange: (Int) -> Unit,
+    onNotesChange: (String) -> Unit,
+    onUnitSelected: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier.verticalScroll(rememberScrollState())
     ) {
         OutlinedTextField(
-            value = state.date,
-            onValueChange = events.onDateChange,
+            value = date,
+            onValueChange = onDateChange,
             label = { Text("日期 (YYYY-MM-DD)") },
         )
         ExerciseInput(
-            exercise = state.exercise,
-            expanded = state.exerciseInputExpanded,
-            onExpandedChange = events.onExerciseExpandedChange,
-            onExerciseChange = events.onExerciseChange,
-            filteredSuggestions = state.filteredSuggestions
+            exercise = exercise,
+            expanded = exerciseInputExpanded,
+            onExpandedChange = onExerciseExpandedChange,
+            onExerciseChange = onExerciseChange,
+            filteredSuggestions = filteredSuggestions
         )
         OutlinedTextField(
-            value = state.muscleGroup,
-            onValueChange = events.onMuscleGroupChange,
+            value = muscleGroup,
+            onValueChange = onMuscleGroupChange,
             label = { Text("訓練部位") }
         )
         OutlinedTextField(
-            value = state.weight,
-            onValueChange = events.onWeightChange,
+            value = weight,
+            onValueChange = onWeightChange,
             label = { Text("重量 (kg)") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         OutlinedTextField(
-            value = state.sets,
-            onValueChange = events.onSetsChange,
+            value = sets,
+            onValueChange = onSetsChange,
             label = { Text("組數") },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
@@ -152,33 +208,33 @@ private fun AddWorkoutDialogContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedTextField(
-                value = state.reps,
-                onValueChange = events.onRepsChange,
+                value = reps,
+                onValueChange = onRepsChange,
                 label = { Text("次數/時間") },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             Spacer(modifier = Modifier.width(4.dp))
             RepsUnitDropDown(
-                selectedUnit = state.repsUnit,
-                expanded = state.repsUnitExpanded,
-                onUnitSelected = events.onUnitSelected,
-                onExpandedChange = events.onRepsUnitExpandedChange
+                selectedUnit = repsUnit,
+                expanded = repsUnitExpanded,
+                onUnitSelected = onUnitSelected,
+                onExpandedChange = onRepsUnitExpandedChange
             )
         }
         RatingInput(
             label = "肌肉感覺",
-            rating = state.muscleFeel,
-            onRatingChange = events.onMuscleFeelChange
+            rating = muscleFeel,
+            onRatingChange = onMuscleFeelChange
         )
         RatingInput(
             label = "控制情況",
-            rating = state.control,
-            onRatingChange = events.onControlChange
+            rating = control,
+            onRatingChange = onControlChange
         )
         OutlinedTextField(
-            value = state.notes,
-            onValueChange = events.onNotesChange,
+            value = notes,
+            onValueChange = onNotesChange,
             label = { Text("備註") }
         )
     }
@@ -323,42 +379,32 @@ private fun RatingInputPreview() {
 @Composable
 private fun AddWorkoutDialogPreview() {
     WorkoutLogTheme {
-        val state = AddWorkoutDialogState(
-            date = "2023-08-01",
+        AddWorkoutDialogContent(
+            date = "2023-09-03",
             exercise = "引體向上",
             muscleGroup = "三角肌 (前束)",
-            weight = "10.0",
             sets = "3",
             reps = "8",
             repsUnit = "次",
-            muscleFeel = 3,
-            control = 3,
-            notes = "remark",
+            weight = "10.0",
             exerciseInputExpanded = false,
             repsUnitExpanded = false,
-            filteredSuggestions = listOf("引體向上", "深蹲")
-        )
-
-        val events = AddWorkoutDialogEvents(
+            muscleFeel = 3,
+            control = 3,
+            notes = "",
             onDateChange = {},
             onExerciseChange = {},
             onExerciseExpandedChange = {},
-            onRepsUnitExpandedChange = {},
-            onMuscleGroupChange = {},
-            onWeightChange = {},
+            filteredSuggestions = emptyList(),
             onSetsChange = {},
-            onRepsChange = {},
-            onUnitSelected = {},
+            onWeightChange = {},
             onMuscleFeelChange = {},
-            onControlChange = {},
+            onRepsUnitExpandedChange = {},
             onNotesChange = {},
-            onDismiss = {},
-            onAddWorkout = {}
-        )
-
-        AddWorkoutDialogContent(
-            state = state,
-            events = events
+            onMuscleGroupChange = {},
+            onControlChange = {},
+            onRepsChange = {},
+            onUnitSelected = {}
         )
     }
 }

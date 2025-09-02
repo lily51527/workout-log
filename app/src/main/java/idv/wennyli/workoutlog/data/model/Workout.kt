@@ -11,7 +11,7 @@ data class Workout(
     val muscleGroup: String = "",
     val weight: Double = 0.0,
     val sets: Int = 0,
-    val reps: Double = 0.0,
+    val reps: Int = 0,
     val repsUnit: String = "次數",
     val muscleFeel: Int = 3,
     val control: Int = 3,

@@ -8,7 +8,7 @@ import androidx.navigation.compose.composable
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.view.settings.Settings
 import idv.wennyli.workoutlog.ui.view.Timer
-import idv.wennyli.workoutlog.ui.view.WorkoutLog
+import idv.wennyli.workoutlog.ui.view.workoutLog.WorkoutLog
 
 // 定義底部導覽項目
 sealed class BottomNavItem(val route: String, val iconId: Int, val labelId: Int) {

@@ -230,6 +230,11 @@ private fun WorkoutItem(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
+                Text(
+                    text = workout.date,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Text(workout.exercise, style = MaterialTheme.typography.titleMedium)
                 Text(workout.muscleGroup, style = MaterialTheme.typography.bodyMedium)
                 Text(

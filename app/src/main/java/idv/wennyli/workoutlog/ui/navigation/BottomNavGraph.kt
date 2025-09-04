@@ -7,7 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.view.settings.Settings
-import idv.wennyli.workoutlog.ui.view.Timer
+import idv.wennyli.workoutlog.ui.view.timer.Timer
 import idv.wennyli.workoutlog.ui.view.workoutLog.WorkoutLog
 
 // 定義底部導覽項目

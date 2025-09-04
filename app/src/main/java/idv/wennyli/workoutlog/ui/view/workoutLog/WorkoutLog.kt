@@ -106,7 +106,7 @@ private fun WorkoutLogScreen(
                 )
                 Spacer(modifier = Modifier.padding(8.dp))
                 WorkoutList(
-                    workoutList = workoutList,
+                    workoutList = workoutList.filter { it.date == currentDate },
                     onDeleteWorkout = onDeleteWorkout
                 )
             }

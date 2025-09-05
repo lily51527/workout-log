@@ -11,7 +11,17 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Locale
+
+// 這個 data class 專門用於 SettingsScreen 的 UI 顯示
+data class BodyMeasurementUiState(
+    val id: String,
+    val formattedDate: String, // 預先格式化好的日期字串
+    val details: String // 預先組合好的身高體重等詳細資訊
+)
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -22,8 +32,10 @@ class SettingsViewModel @Inject constructor(
     private val _userProfile = MutableStateFlow<UserProfile?>(null)
     val userProfile: StateFlow<UserProfile?> = _userProfile.asStateFlow()
 
-    private val _measurements = MutableStateFlow<List<BodyMeasurement>>(emptyList())
-    val measurements: StateFlow<List<BodyMeasurement>> = _measurements.asStateFlow()
+    private val _measurementUiStateList =
+        MutableStateFlow<List<BodyMeasurementUiState>>(emptyList())
+    val measurementUiStateList: StateFlow<List<BodyMeasurementUiState>> =
+        _measurementUiStateList.asStateFlow()
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
@@ -58,8 +70,10 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadBodyMeasurements() {
         viewModelScope.launch {
-            bodyMeasurementRepository.getBodyMeasurements().collect { measurementList ->
-                _measurements.value = measurementList
+            bodyMeasurementRepository.getBodyMeasurements().map { measurements ->
+                measurements.map { measurement -> measurement.toUiState() }
+            }.collect { measurementList ->
+                _measurementUiStateList.value = measurementList
             }
         }
     }
@@ -103,4 +117,20 @@ class SettingsViewModel @Inject constructor(
     fun clearError() {
         _error.value = null
     }
+}
+
+// 擴充函式，將原始資料模型轉換為 UI 狀態模型
+private fun BodyMeasurement.toUiState(): BodyMeasurementUiState {
+    val formattedDate = this.timestamp?.let {
+        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it)
+    } ?: "N/A"
+
+    val bodyFatText = this.bodyFat?.let { ", 體脂: $it%" } ?: ""
+    val details = "身高: ${this.height} cm, 體重: ${this.weight} kg$bodyFatText"
+
+    return BodyMeasurementUiState(
+        id = this.id,
+        formattedDate = formattedDate,
+        details = details
+    )
 }

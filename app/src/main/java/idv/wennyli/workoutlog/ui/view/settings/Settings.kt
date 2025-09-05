@@ -62,7 +62,7 @@ fun Settings(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val userProfile by viewModel.userProfile.collectAsState()
-    val measurementList by viewModel.measurements.collectAsState()
+    val measurementUiStateList by viewModel.measurementUiStateList.collectAsState()
     val error by viewModel.error.collectAsState()
 
     var height by remember { mutableStateOf("") }
@@ -71,7 +71,7 @@ fun Settings(
 
     SettingsScreen(
         userProfile = userProfile,
-        measurementList = measurementList,
+        measurementUiStateList = measurementUiStateList,
         error = error,
         height = height,
         weight = weight,
@@ -87,7 +87,7 @@ fun Settings(
             weight = ""
             bodyFat = ""
         },
-        onMeasurementDelete = { viewModel.deleteBodyMeasurement(it.id) },
+        onMeasurementDelete = { measurementId -> viewModel.deleteBodyMeasurement(measurementId) },
         onClearError = { viewModel.clearError() }
     )
 }
@@ -95,7 +95,7 @@ fun Settings(
 @Composable
 private fun SettingsScreen(
     userProfile: UserProfile?,
-    measurementList: List<BodyMeasurement>,
+    measurementUiStateList: List<BodyMeasurementUiState>,
     error: String?,
     height: String,
     weight: String,
@@ -106,7 +106,7 @@ private fun SettingsScreen(
     onWeightChange: (String) -> Unit,
     onBodyFatChange: (String) -> Unit,
     onSave: () -> Unit,
-    onMeasurementDelete: (BodyMeasurement) -> Unit,
+    onMeasurementDelete: (String) -> Unit,
     onClearError: () -> Unit,
 ) {
     LazyColumn(
@@ -143,7 +143,7 @@ private fun SettingsScreen(
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
 
-        if (measurementList.isEmpty()) {
+        if (measurementUiStateList.isEmpty()) {
             item {
                 Box(
                     modifier = Modifier.fillMaxSize(),
@@ -153,9 +153,9 @@ private fun SettingsScreen(
                 }
             }
         } else {
-            items(measurementList, key = { it.id }) { measurement ->
+            items(measurementUiStateList, key = { it.id }) { measurementUiState ->
                 MeasurementItem(
-                    measurement = measurement,
+                    measurementUiState = measurementUiState,
                     onDelete = onMeasurementDelete
                 )
             }
@@ -333,15 +333,9 @@ private fun MeasurementInputCard(
 
 @Composable
 private fun MeasurementItem(
-    measurement: BodyMeasurement,
-    onDelete: (BodyMeasurement) -> Unit
+    measurementUiState: BodyMeasurementUiState,
+    onDelete: (String) -> Unit
 ) {
-    val formattedDate = measurement.timestamp?.let {
-        SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(it)
-    } ?: "N/A"
-
-    val bodyFatText = measurement.bodyFat?.let { ", 體脂: $it%" } ?: ""
-
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -359,16 +353,16 @@ private fun MeasurementItem(
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = formattedDate,
+                    text = measurementUiState.formattedDate,
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Text(
-                    text = "身高: ${measurement.height} cm, 體重: ${measurement.weight} kg$bodyFatText",
+                    text = measurementUiState.details,
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
 
-            IconButton(onClick = { onDelete(measurement) }) {
+            IconButton(onClick = { onDelete(measurementUiState.id) }) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "刪除紀錄",
@@ -413,11 +407,10 @@ private fun MeasurementInputCardPreview() {
 private fun MeasurementItemPreview() {
     WorkoutLogTheme {
         MeasurementItem(
-            measurement = BodyMeasurement(
-                height = 170.0,
-                weight = 70.0,
-                bodyFat = 15.0,
-                timestamp = Date()
+            measurementUiState = BodyMeasurementUiState(
+                id = "1",
+                formattedDate = "2023-07-01",
+                details = "身高: 170 cm, 體重: 70 kg, 體脂: 15%"
             ),
             onDelete = {}
         )
@@ -430,7 +423,7 @@ private fun SettingsScreenPreview() {
     WorkoutLogTheme {
         SettingsScreen(
             userProfile = UserProfile(),
-            measurementList = emptyList(),
+            measurementUiStateList = emptyList(),
             error = null,
             onGenderChange = {},
             onBirthDateChange = {},

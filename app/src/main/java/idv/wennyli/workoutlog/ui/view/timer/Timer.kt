@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -25,28 +28,29 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import kotlinx.coroutines.delay
 
-private enum class TimerState {
-    IDLE, WORKING, RESTING, FINISHED
-}
-
 @Composable
-fun Timer() {
-    var exerciseName by remember { mutableStateOf("") }
-    var totalSets by remember { mutableIntStateOf(3) }
-    var restTime by remember { mutableIntStateOf(60) }
-    var currentSet by remember { mutableIntStateOf(0) }
-    var timeLeft by remember { mutableIntStateOf(0) }
-    var timerState by remember { mutableStateOf(TimerState.IDLE) }
+fun Timer(
+    viewModel: TimerViewModel = hiltViewModel()
+) {
+    val exerciseName by viewModel.exerciseName.collectAsState()
+    val totalSets by viewModel.totalSets.collectAsState()
+    val restTime by viewModel.restTime.collectAsState()
+    val currentSet by viewModel.currentSet.collectAsState()
+    val timeLeft by viewModel.timeLeft.collectAsState()
+    val timerState by viewModel.timerState.collectAsState()
+    val showSaveConfirmation by viewModel.showSaveConfirmation.collectAsState()
 
     LaunchedEffect(key1 = timeLeft, key2 = timerState) {
         if (timerState == TimerState.RESTING && timeLeft > 0) {
             delay(1000L)
-            timeLeft--
+            viewModel.setTimeLeft(timeLeft - 1)
         } else if (timerState == TimerState.RESTING && timeLeft == 0) {
-            timerState = if (currentSet < totalSets) TimerState.WORKING else TimerState.FINISHED
+            val nextState = if (currentSet < totalSets) TimerState.WORKING else TimerState.FINISHED
+            viewModel.setTimerState(nextState)
         }
     }
 
@@ -57,33 +61,16 @@ fun Timer() {
         currentSet = currentSet,
         timeLeft = timeLeft,
         timerState = timerState,
-        onExerciseNameChange = { exerciseName = it },
-        onTotalSetsChange = { totalSets = it },
-        onRestTimeChange = { restTime = it },
-        onStartSet = {
-            if (currentSet < totalSets) {
-                currentSet++
-                timerState = TimerState.WORKING
-            }
-        },
-        onStartRest = {
-            if (timerState == TimerState.WORKING) {
-                timeLeft = restTime
-                timerState = TimerState.RESTING
-            }
-        },
-        onSkipRest = {
-            timeLeft = 0
-            timerState = if (currentSet < totalSets) TimerState.WORKING else TimerState.FINISHED
-        },
-        onReset = {
-            exerciseName = ""
-            totalSets = 3
-            restTime = 60
-            currentSet = 0
-            timeLeft = 0
-            timerState = TimerState.IDLE
-        }
+        isShowSaveConfirmation = showSaveConfirmation,
+        onExerciseNameChange = { viewModel.onExerciseNameChange(it) },
+        onTotalSetsChange = { viewModel.onTotalSetsChange(it) },
+        onRestTimeChange = { viewModel.onRestTimeChange(it) },
+        onStartSet = { viewModel.onStartSet() },
+        onStartRest = { viewModel.onStartRest() },
+        onSkipRest = { viewModel.onSkipRest() },
+        onReset = { viewModel.onReset() },
+        onSaveWorkout = { viewModel.saveWorkout() },
+        onSaveConfirmationDismissRequest = { viewModel.onReset() }
     )
 }
 
@@ -95,14 +82,30 @@ private fun TimerScreen(
     currentSet: Int,
     timeLeft: Int,
     timerState: TimerState,
+    isShowSaveConfirmation: Boolean,
     onExerciseNameChange: (String) -> Unit,
     onTotalSetsChange: (Int) -> Unit,
     onRestTimeChange: (Int) -> Unit,
     onStartSet: () -> Unit,
     onStartRest: () -> Unit,
     onSkipRest: () -> Unit,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    onSaveWorkout: () -> Unit,
+    onSaveConfirmationDismissRequest: () -> Unit
 ) {
+    if (isShowSaveConfirmation) {
+        AlertDialog(
+            onDismissRequest = onSaveConfirmationDismissRequest,
+            title = { Text("儲存成功") },
+            text = { Text("訓練紀錄已成功新增至您的日誌。") },
+            confirmButton = {
+                Button(onClick = onSaveConfirmationDismissRequest) {
+                    Text("確定")
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .padding(16.dp)
@@ -133,7 +136,9 @@ private fun TimerScreen(
             onStartSet = onStartSet,
             onStartRest = onStartRest,
             onSkipRest = onSkipRest,
-            onReset = onReset
+            onReset = onReset,
+            onSaveWorkout = onSaveWorkout,
+            isSaveEnabled = exerciseName.isNotBlank() && currentSet > 0
         )
     }
 }
@@ -214,9 +219,23 @@ private fun TimerControls(
     onStartSet: () -> Unit,
     onStartRest: () -> Unit,
     onSkipRest: () -> Unit,
-    onReset: () -> Unit
+    onReset: () -> Unit,
+    onSaveWorkout: () -> Unit,
+    isSaveEnabled: Boolean
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        // 當計時器完成時，顯示儲存按鈕
+        if (timerState == TimerState.FINISHED) {
+            Button(
+                onClick = onSaveWorkout,
+                enabled = isSaveEnabled,
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Text("儲存紀錄至日誌")
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -301,7 +320,9 @@ private fun TimerControlsPreview() {
             onStartSet = {},
             onStartRest = {},
             onSkipRest = {},
-            onReset = {}
+            onReset = {},
+            onSaveWorkout = {},
+            isSaveEnabled = true
         )
     }
 }
@@ -323,7 +344,10 @@ fun TimerScreenPreview() {
             onStartSet = {},
             onStartRest = {},
             onSkipRest = {},
-            onReset = {}
+            onReset = {},
+            onSaveWorkout = {},
+            isShowSaveConfirmation = false,
+            onSaveConfirmationDismissRequest = {}
         )
     }
 }

@@ -10,11 +10,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -30,10 +33,23 @@ import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Main(mainNavController: NavController) {
+fun Main(
+    mainNavController: NavController,
+    viewModel: MainScreenViewModel = hiltViewModel()
+) {
     val bottomNavController = rememberNavController()
     val navBackStackEntry by bottomNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+
+    val isLoggedOut by viewModel.isLoggedOut.collectAsState()
+
+    LaunchedEffect(isLoggedOut) {
+        if (isLoggedOut) {
+            mainNavController.navigate(Screen.Login.route) {
+                popUpTo(Screen.Main.route) { inclusive = true }
+            }
+        }
+    }
 
     val items = listOf(
         BottomNavItem.Log,
@@ -53,10 +69,7 @@ fun Main(mainNavController: NavController) {
                     // 只在設定頁面顯示登出按鈕
                     if (currentDestination?.route == BottomNavItem.Settings.route) {
                         IconButton(onClick = {
-                            Firebase.auth.signOut()
-                            mainNavController.navigate(Screen.Login.route) {
-                                popUpTo(Screen.Main.route) { inclusive = true }
-                            }
+                            viewModel.signOut()
                         }) {
                             Icon(
                                 painter = painterResource(R.drawable.outline_logout_24),

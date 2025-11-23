@@ -1,7 +1,9 @@
 package idv.wennyli.workoutlog.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import idv.wennyli.workoutlog.data.model.BodyMeasurement
 import idv.wennyli.workoutlog.data.model.UserProfile
@@ -12,6 +14,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Named
+
+private const val TAG = "WorkoutRepository"
 
 // Repository 介面，定義資料操作的合約
 interface WorkoutRepository {
@@ -41,7 +45,12 @@ class WorkoutRepositoryImpl @Inject constructor(
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    Log.e(TAG, "SnapshotListener Error : $error")
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        close()
+                    } else {
+                        error(error)
+                    }
                     return@addSnapshotListener
                 }
                 val workouts = snapshot?.documents?.mapNotNull { doc ->

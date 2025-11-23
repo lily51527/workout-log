@@ -1,7 +1,9 @@
 package idv.wennyli.workoutlog.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import idv.wennyli.workoutlog.data.model.BodyMeasurement
 import jakarta.inject.Inject
@@ -10,6 +12,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+
+private const val TAG = "BodyMeasurementRepository"
 
 interface BodyMeasurementRepository {
     // 身體測量記錄相關
@@ -37,7 +41,12 @@ class BodyMeasurementRepositoryImpl @Inject constructor(
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    close(error)
+                    Log.e(TAG, "SnapshotListener Error : $error")
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        close()
+                    } else {
+                        error(error)
+                    }
                     return@addSnapshotListener
                 }
                 val measurements = snapshot?.documents?.mapNotNull { doc ->

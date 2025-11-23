@@ -1,7 +1,9 @@
 package idv.wennyli.workoutlog.data.repository
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import idv.wennyli.workoutlog.data.model.UserProfile
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -9,6 +11,8 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Named
+
+private const val TAG = "UserProfileRepository"
 
 interface UserProfileRepository {
     // 使用者個人資料相關
@@ -35,7 +39,12 @@ class UserProfileRepositoryImpl @Inject constructor(
         val listener = firestore.document(docPath)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
-                    error(error)
+                    Log.e(TAG, "SnapshotListener Error : $error")
+                    if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
+                        close()
+                    } else {
+                        error(error)
+                    }
                     return@addSnapshotListener
                 }
                 val userProfile = snapshot?.toObject(UserProfile::class.java)

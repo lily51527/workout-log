@@ -17,9 +17,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -43,6 +40,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -262,7 +260,7 @@ private fun ProfileCard(
                 onClick = { datePickerDialog.show() }
             ) {
                 Icon(
-                    Icons.Default.DateRange,
+                    painterResource(R.drawable.calendar_month_24px),
                     contentDescription = "選擇日期",
                     modifier = Modifier.size(
                         ButtonDefaults.IconSize
@@ -364,7 +362,7 @@ private fun MeasurementItem(
 
             IconButton(onClick = { onDelete(measurementUiState.id) }) {
                 Icon(
-                    Icons.Default.Delete,
+                    painterResource(R.drawable.delete_24px),
                     contentDescription = "刪除紀錄",
                     tint = MaterialTheme.colorScheme.error
                 )

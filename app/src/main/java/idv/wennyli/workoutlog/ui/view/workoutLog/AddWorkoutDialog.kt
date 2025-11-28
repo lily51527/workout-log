@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -34,9 +32,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.Workout
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import java.text.SimpleDateFormat
@@ -293,7 +293,7 @@ private fun RepsUnitDropDown(
             onClick = { onExpandedChange(true) }
         ) {
             Text(selectedUnit)
-            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            Icon(painter = painterResource(R.drawable.arrow_drop_down_24px), contentDescription = null)
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
             DropdownMenuItem(

@@ -72,7 +72,7 @@ class BodyMeasurementRepositoryTest {
         every {
             mockCollectionReference.orderBy(
                 any<String>(),
-                any<Query.Direction>()
+                Query.Direction.DESCENDING
             )
         } returns mockCollectionReference
 
@@ -103,6 +103,10 @@ class BodyMeasurementRepositoryTest {
 
             // 取消訂閱
             cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) {
+            mockCollectionReference.orderBy("timestamp", Query.Direction.DESCENDING)
         }
     }
 

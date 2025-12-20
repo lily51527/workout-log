@@ -120,12 +120,11 @@ class BodyMeasurementRepositoryTest {
             // 檢查發出的第一個值是否為空列表
             assertThat(awaitItem()).isEmpty()
 
-            // 確保 Firestore 的任何方法都未被呼叫
-            verify(exactly = 0) { mockFirestore.collection(any()) }
-
             // 取消訂閱
             cancelAndIgnoreRemainingEvents()
         }
+        // 確保 Firestore 的任何方法都未被呼叫
+        verify(exactly = 0) { mockFirestore.collection(any()) }
     }
 
     //測試 addBodyMeasurement() 函式

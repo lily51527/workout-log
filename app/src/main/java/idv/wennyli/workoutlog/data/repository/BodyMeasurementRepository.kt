@@ -45,7 +45,7 @@ class BodyMeasurementRepositoryImpl @Inject constructor(
                     if (error.code == FirebaseFirestoreException.Code.PERMISSION_DENIED) {
                         close()
                     } else {
-                        error(error)
+                        close(error)
                     }
                     return@addSnapshotListener
                 }

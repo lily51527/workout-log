@@ -18,6 +18,7 @@ import com.google.firebase.firestore.QuerySnapshot
 import idv.wennyli.workoutlog.data.model.BodyMeasurement
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepository
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepositoryImpl
+import io.mockk.awaits
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -172,6 +173,43 @@ class BodyMeasurementRepositoryTest {
         }
 
         // 額外驗證：確認有呼叫 remove 來清理資源
+        verify(exactly = 1) { mockListenerRegistration.remove() }
+    }
+
+    // 其他一般錯誤 (General Error)
+    @Test
+    fun `getBodyMeasurements should close flow gracefully when occur general Error`() = runTest {
+        // Arrange
+        every { mockFirestore.collection(any()) } returns mockCollectionReference
+        every {
+            mockCollectionReference.orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
+        } returns mockCollectionReference
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        // 1. 準備一個 "其他" 錯誤 (例如 UNAVAILABLE)
+        // 修正：使用【真實】的 Exception 物件，而不是 Mock。
+        // 因為我們已經加了 SparseArray stub，所以這裡可以直接 new 出來，不會報 Stub! 錯。
+        // 這樣 Coroutines 內部讀取 getCause() 時才不會崩潰。
+        val generalException =
+            FirebaseFirestoreException("Unavailable", FirebaseFirestoreException.Code.UNAVAILABLE)
+
+        // Act
+        repository.getBodyMeasurements().test {
+            // 2. 觸發錯誤
+            listenerSlot.captured.onEvent(null, generalException)
+
+            // Assert
+            // 3. 驗證收到的是 awaitError()，而且拋出的異常就是我們準備的那一個
+            val error = awaitError()
+            assertThat(error).isEqualTo(generalException)
+        }
+
+        // 驗證即使發生錯誤，資源依然有被清理 (remove 仍會被呼叫)
         verify(exactly = 1) { mockListenerRegistration.remove() }
     }
 

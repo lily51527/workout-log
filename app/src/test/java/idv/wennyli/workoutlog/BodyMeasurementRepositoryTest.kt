@@ -3,6 +3,7 @@ package idv.wennyli.workoutlog
 import app.cash.turbine.test
 import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
+import com.google.firebase.FirebaseException
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.CollectionReference
@@ -10,13 +11,17 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.QuerySnapshot
 import idv.wennyli.workoutlog.data.model.BodyMeasurement
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepository
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepositoryImpl
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +39,7 @@ class BodyMeasurementRepositoryTest {
     private lateinit var mockUser: FirebaseUser
     private lateinit var mockCollectionReference: CollectionReference
     private lateinit var mockDocumentReference: DocumentReference
+    private lateinit var mockListenerRegistration: ListenerRegistration
 
     private lateinit var repository: BodyMeasurementRepository
 
@@ -52,10 +58,14 @@ class BodyMeasurementRepositoryTest {
         mockUser = mockk()
         mockCollectionReference = mockk()
         mockDocumentReference = mockk()
+        mockListenerRegistration = mockk()
 
         // 設定通用的模擬行為：使用者已登入
         every { mockAuth.currentUser } returns mockUser
         every { mockUser.uid } returns fakeUserId
+
+        // 新增：當呼叫 remove 時，什麼都不做 (just runs)
+        every { mockListenerRegistration.remove() } just runs
 
         repository = BodyMeasurementRepositoryImpl(
             auth = mockAuth,
@@ -71,14 +81,14 @@ class BodyMeasurementRepositoryTest {
         every { mockFirestore.collection(any()) } returns mockCollectionReference
         every {
             mockCollectionReference.orderBy(
-                any<String>(),
+                "timestamp",
                 Query.Direction.DESCENDING
             )
         } returns mockCollectionReference
 
         // 捕捉 addSnapshotListener 的 Listener
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
-        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockk()
+        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
         // 模擬 QuerySnapshot
         val mockQuerySnapshot: QuerySnapshot = mockk {
@@ -125,6 +135,44 @@ class BodyMeasurementRepositoryTest {
         }
         // 確保 Firestore 的任何方法都未被呼叫
         verify(exactly = 0) { mockFirestore.collection(any()) }
+    }
+
+    // 當權限不足時，應該優雅地關閉 Flow
+    @Test
+    fun `getBodyMeasurements should close flow gracefully when permission denied`() = runTest {
+        // Arrange
+        every { mockFirestore.collection(any()) } returns mockCollectionReference
+        every {
+            mockCollectionReference.orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
+        } returns mockCollectionReference
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        // 準備一個模擬的 FirebaseFirestoreException
+        val permissionDeniedException = mockk<FirebaseFirestoreException> {
+            every { code } returns FirebaseFirestoreException.Code.PERMISSION_DENIED
+            every { message } returns "Permission denied"
+        }
+
+        // Act
+        repository.getBodyMeasurements().test {
+            // 觸發錯誤
+            listenerSlot.captured.onEvent(null, permissionDeniedException)
+
+            // Assert
+            // 驗證 Flow 是否 "完成" (Complete) 而不是 "報錯" (Error)
+            awaitComplete()
+
+            // 確保沒有其他未預期的事件 (因為 Flow 已經結束，不能用 cancelAndIgnoreRemainingEvents)
+            ensureAllEventsConsumed()
+        }
+
+        // 額外驗證：確認有呼叫 remove 來清理資源
+        verify(exactly = 1) { mockListenerRegistration.remove() }
     }
 
     //測試 addBodyMeasurement() 函式

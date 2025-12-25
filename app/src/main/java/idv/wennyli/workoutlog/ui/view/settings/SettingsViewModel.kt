@@ -1,5 +1,6 @@
 package idv.wennyli.workoutlog.ui.view.settings
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,6 +12,7 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -22,6 +24,8 @@ data class BodyMeasurementUiState(
     val formattedDate: String, // 預先格式化好的日期字串
     val details: String // 預先組合好的身高體重等詳細資訊
 )
+
+private const val TAG = "SettingsViewModel"
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -72,6 +76,8 @@ class SettingsViewModel @Inject constructor(
         viewModelScope.launch {
             bodyMeasurementRepository.getBodyMeasurements().map { measurements ->
                 measurements.map { measurement -> measurement.toUiState() }
+            }.catch { exception ->
+                Log.e(TAG, "loadBodyMeasurements error exception : $exception")
             }.collect { measurementList ->
                 _measurementUiStateList.value = measurementList
             }

@@ -213,6 +213,49 @@ class BodyMeasurementRepositoryTest {
         verify(exactly = 1) { mockListenerRegistration.remove() }
     }
 
+    @Test
+    fun `getBodyMeasurements should filter out invalid documents when parsing fails`() = runTest {
+        // Arrange
+        every { mockFirestore.collection(any()) } returns mockCollectionReference
+        every {
+            mockCollectionReference.orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
+        } returns mockCollectionReference
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val doc1 = mockk<DocumentSnapshot> {
+            every { id } returns "1"
+            every { toObject(BodyMeasurement::class.java) } returns fakeMeasurements[0]
+        }
+
+        val doc2 = mockk<DocumentSnapshot> {
+            every { id } returns "invalid_doc"
+            every { toObject(BodyMeasurement::class.java) } returns null
+        }
+
+        val doc3 = mockk<DocumentSnapshot> {
+            every { id } returns "2"
+            every { toObject(BodyMeasurement::class.java) } returns fakeMeasurements[1]
+        }
+
+        val mockQuerySnapshot: QuerySnapshot = mockk {
+            every { documents } returns listOf(doc1, doc2, doc3)
+        }
+
+        repository.getBodyMeasurements().test {
+            listenerSlot.captured.onEvent(mockQuerySnapshot, null)
+
+            val result = awaitItem()
+            assertThat(result).isEqualTo(listOf(fakeMeasurements[0], fakeMeasurements[1]))
+
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     //測試 addBodyMeasurement() 函式
     @Test
     fun `addBodyMeasurement should call add with correct measurement`() = runTest {

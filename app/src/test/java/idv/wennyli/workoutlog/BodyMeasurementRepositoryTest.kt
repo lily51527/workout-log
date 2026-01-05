@@ -213,6 +213,7 @@ class BodyMeasurementRepositoryTest {
         verify(exactly = 1) { mockListenerRegistration.remove() }
     }
 
+    // 新增測試：資料轉換容錯 (Parsing Error)
     @Test
     fun `getBodyMeasurements should filter out invalid documents when parsing fails`() = runTest {
         // Arrange
@@ -227,30 +228,41 @@ class BodyMeasurementRepositoryTest {
         val listenerSlot = slot<EventListener<QuerySnapshot>>()
         every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
 
+        // 準備 3 個 DocumentSnapshot
+        // Doc 1: 正常資料
         val doc1 = mockk<DocumentSnapshot> {
             every { id } returns "1"
             every { toObject(BodyMeasurement::class.java) } returns fakeMeasurements[0]
         }
 
+        // Doc 2: 壞掉的資料 (模擬 toObject 回傳 null)
         val doc2 = mockk<DocumentSnapshot> {
             every { id } returns "invalid_doc"
             every { toObject(BodyMeasurement::class.java) } returns null
         }
 
+        // Doc 3: 正常資料
         val doc3 = mockk<DocumentSnapshot> {
             every { id } returns "2"
             every { toObject(BodyMeasurement::class.java) } returns fakeMeasurements[1]
         }
 
+        // 模擬 QuerySnapshot 包含這 3 筆文件
         val mockQuerySnapshot: QuerySnapshot = mockk {
             every { documents } returns listOf(doc1, doc2, doc3)
         }
 
+        // Act
         repository.getBodyMeasurements().test {
+            // 觸發事件
             listenerSlot.captured.onEvent(mockQuerySnapshot, null)
 
+            // Assert
+            // 驗證我們只收到 2 筆資料 (壞掉的那筆被濾掉了)
             val result = awaitItem()
-            assertThat(result).isEqualTo(listOf(fakeMeasurements[0], fakeMeasurements[1]))
+            assertThat(result).hasSize(2)
+            // 驗證內容確實是 doc1 和 doc3
+            assertThat(result).containsExactly(fakeMeasurements[0], fakeMeasurements[1])
 
             cancelAndIgnoreRemainingEvents()
         }

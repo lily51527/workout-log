@@ -268,6 +268,34 @@ class BodyMeasurementRepositoryTest {
         }
     }
 
+    // 新增測試：驗證 Flow 取消時會移除監聽器
+    @Test
+    fun `getBodyMeasurements should remove listener when flow is cancelled`() = runTest {
+        // Arrange
+        every { mockFirestore.collection(any()) } returns mockCollectionReference
+        every {
+            mockCollectionReference.orderBy(
+                "timestamp",
+                Query.Direction.DESCENDING
+            )
+        } returns mockCollectionReference
+
+        val listenerSlot = slot<EventListener<QuerySnapshot>>()
+        // 重要：一定要回傳我們控制的 mockListenerRegistration
+        every { mockCollectionReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        // Act
+        repository.getBodyMeasurements().test {
+            // 這裡我們甚至不需要發送任何資料，只要開啟 Flow
+            // 然後立刻取消訂閱
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Assert
+        // 驗證：當 Flow 被取消後，remove() 必須被呼叫
+        verify(exactly = 1) { mockListenerRegistration.remove() }
+    }
+
     //測試 addBodyMeasurement() 函式
     @Test
     fun `addBodyMeasurement should call add with correct measurement`() = runTest {

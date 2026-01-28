@@ -37,17 +37,17 @@ android {
             buildConfigField("String", "APP_ID", "\"workout-log-release\"")
         }
     }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_18
-        targetCompatibility = JavaVersion.VERSION_18
-    }
-    kotlinOptions {
-        jvmTarget = "18"
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
     }
     buildFeatures {
         compose = true
         buildConfig = true
     }
+}
+
+kotlin {
+    jvmToolchain(17)
 }
 
 dependencies {

@@ -187,4 +187,21 @@ class SettingsViewModelTest {
             assertThat(viewModel.error.value).contains(errorMsg)
         }
 
+    @Test
+    fun `init should handle error when load measurements fails`() = runTest {
+        val errorMsg = "Load Failed"
+        every { mockBodyMeasurementRepository.getBodyMeasurements() } returns flow {
+            throw Exception(
+                errorMsg
+            )
+        }
+
+        val errorViewModel = SettingsViewModel(
+            userProfileRepository = mockUserProfileRepository,
+            bodyMeasurementRepository = mockBodyMeasurementRepository
+        )
+
+        assertThat(errorViewModel.error.value).contains("載入數據失敗")
+        assertThat(errorViewModel.error.value).contains(errorMsg)
+    }
 }

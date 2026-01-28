@@ -78,6 +78,7 @@ class SettingsViewModel @Inject constructor(
                 measurements.map { measurement -> measurement.toUiState() }
             }.catch { exception ->
                 Log.e(TAG, "loadBodyMeasurements error exception : $exception")
+                _error.value = "載入數據失敗: ${exception.message}"
             }.collect { measurementList ->
                 _measurementUiStateList.value = measurementList
             }

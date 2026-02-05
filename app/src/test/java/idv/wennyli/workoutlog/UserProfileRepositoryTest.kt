@@ -9,11 +9,15 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.EventListener
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.ListenerRegistration
 import idv.wennyli.workoutlog.data.model.UserProfile
 import idv.wennyli.workoutlog.data.repository.UserProfileRepository
 import idv.wennyli.workoutlog.data.repository.UserProfileRepositoryImpl
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,6 +33,7 @@ class UserProfileRepositoryTest {
     private lateinit var mockFirestore: FirebaseFirestore
     private lateinit var mockUser: FirebaseUser
     private lateinit var mockDocumentReference: DocumentReference
+    private lateinit var mockListenerRegistration: ListenerRegistration
 
     private lateinit var repository: UserProfileRepository
 
@@ -42,10 +47,13 @@ class UserProfileRepositoryTest {
         mockFirestore = mockk()
         mockUser = mockk()
         mockDocumentReference = mockk()
+        mockListenerRegistration = mockk()
 
         // 設定一些通用的模擬行為
         every { mockAuth.currentUser } returns mockUser
         every { mockUser.uid } returns fakeUserId
+
+        every { mockListenerRegistration.remove() } just runs
 
         // 創建我們要測試的 Repository 實例
         repository = UserProfileRepositoryImpl(
@@ -108,6 +116,61 @@ class UserProfileRepositoryTest {
             // 取消訂閱
             cancelAndIgnoreRemainingEvents()
         }
+    }
+
+    @Test
+    fun `getUserProfile should close flow gracefully when permission denied`() = runTest {
+        every { mockFirestore.document(any()) } returns mockDocumentReference
+
+        val listenerSlot = slot<EventListener<DocumentSnapshot>>()
+        every { mockDocumentReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val permissionDeniedException = mockk<FirebaseFirestoreException> {
+            every { code } returns FirebaseFirestoreException.Code.PERMISSION_DENIED
+            every { message } returns "Permission denied"
+        }
+
+        repository.getUserProfile().test {
+            listenerSlot.captured.onEvent(null, permissionDeniedException)
+            awaitComplete()
+            ensureAllEventsConsumed()
+        }
+
+        verify(exactly = 1) { mockListenerRegistration.remove() }
+    }
+
+    @Test
+    fun `getUserProfile should close flow gracefully when occur general Error`() = runTest {
+        every { mockFirestore.document(any()) } returns mockDocumentReference
+
+        val listenerSlot = slot<EventListener<DocumentSnapshot>>()
+        every { mockDocumentReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        val generalException =
+            FirebaseFirestoreException("Unavailable", FirebaseFirestoreException.Code.UNAVAILABLE)
+
+        repository.getUserProfile().test {
+            listenerSlot.captured.onEvent(null, generalException)
+
+            val error = awaitError()
+            assertThat(error).isEqualTo(generalException)
+        }
+
+        verify(exactly = 1) { mockListenerRegistration.remove() }
+    }
+
+    @Test
+    fun `getUserProfile should remove listener when flow is cancelled`() = runTest {
+        every { mockFirestore.document(any()) } returns mockDocumentReference
+
+        val listenerSlot = slot<EventListener<DocumentSnapshot>>()
+        every { mockDocumentReference.addSnapshotListener(capture(listenerSlot)) } returns mockListenerRegistration
+
+        repository.getUserProfile().test {
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        verify(exactly = 1) { mockListenerRegistration.remove() }
     }
 
     // 測試 updateUserProfile() 函式

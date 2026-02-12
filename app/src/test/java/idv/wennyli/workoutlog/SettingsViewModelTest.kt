@@ -130,6 +130,44 @@ class SettingsViewModelTest {
         coVerify(exactly = 1) { mockBodyMeasurementRepository.deleteBodyMeasurement(idToDelete) }
     }
 
+    @Test
+    fun `init should load userProfile and map to UiState correctly`() = runTest {
+        // Arrange (setup 已完成)
+
+        // Act & Assert
+        // 驗證 ViewModel 的 userProfile StateFlow 是否正確反映了 Repository 的資料
+        val currentUserProfile = viewModel.userProfile.value
+
+        assertThat(currentUserProfile).isNotNull()
+        assertThat(currentUserProfile).isEqualTo(fakeUserProfile)
+        assertThat(currentUserProfile?.gender).isEqualTo("male")
+        assertThat(currentUserProfile?.birthDate).isEqualTo("1990-01-01")
+    }
+
+    @Test
+    fun `updateUserProfile should call repository update with correct parameters`() = runTest {
+        // Arrange
+        // 模擬 Repository update 成功
+        coEvery { mockUserProfileRepository.updateUserProfile(any()) } returns Unit
+
+        // 假設我們要更新性別，但保留原本的生日
+        val newGender = "female"
+
+        // Act
+        viewModel.updateUserProfile(gender = newGender)
+
+        // Assert
+        // 驗證 Repository 被呼叫，且資料是 "新性別" + "舊生日" (因為 setup 中已載入 fakeUserProfile)
+        coVerify(exactly = 1) {
+            mockUserProfileRepository.updateUserProfile(
+                match {
+                    it.gender == newGender &&
+                            it.birthDate == fakeUserProfile.birthDate
+                }
+            )
+        }
+    }
+
     // --- Boundary / Logic (邊界與邏輯測試) ---
 
     @Test
@@ -189,19 +227,38 @@ class SettingsViewModelTest {
 
     @Test
     fun `init should handle error when load measurements fails`() = runTest {
+        // Arrange - 特殊情況，需要在 init 前重新設定 mock
         val errorMsg = "Load Failed"
+        // 我們需要重新建立一個 ViewModel 來觸發 init，並讓它讀取到會拋出錯誤的 Flow
         every { mockBodyMeasurementRepository.getBodyMeasurements() } returns flow {
             throw Exception(
                 errorMsg
             )
         }
 
+        // Act - 重新初始化 ViewModel
         val errorViewModel = SettingsViewModel(
             userProfileRepository = mockUserProfileRepository,
             bodyMeasurementRepository = mockBodyMeasurementRepository
         )
 
+        // Assert
+        // 這裡需要用 turbine 或是直接檢查 value，因為我們用了 UnconfinedTestDispatcher
         assertThat(errorViewModel.error.value).contains("載入數據失敗")
         assertThat(errorViewModel.error.value).contains(errorMsg)
+    }
+
+    @Test
+    fun `updateUserProfile should handle repository exception`() = runTest {
+        // Arrange
+        val errorMsg = "Network Error"
+        coEvery { mockUserProfileRepository.updateUserProfile(any()) } throws Exception(errorMsg)
+
+        // Act
+        viewModel.updateUserProfile(birthDate = "2000-01-01")
+
+        // Assert
+        assertThat(viewModel.error.value).contains("更新個人資料失敗")
+        assertThat(viewModel.error.value).contains(errorMsg)
     }
 }

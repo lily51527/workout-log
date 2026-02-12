@@ -51,9 +51,14 @@ class SettingsViewModel @Inject constructor(
 
     private fun loadUserProfile() {
         viewModelScope.launch {
-            userProfileRepository.getUserProfile().collect { userProfile ->
-                _userProfile.value = userProfile
-            }
+            userProfileRepository.getUserProfile()
+                .catch { exception ->
+                    Log.e(TAG, "loadUserProfile error exception : $exception")
+                    _error.value = "載入個人資料失敗: ${exception.message}"
+                }
+                .collect { userProfile ->
+                    _userProfile.value = userProfile
+                }
         }
     }
 

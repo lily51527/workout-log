@@ -261,4 +261,22 @@ class SettingsViewModelTest {
         assertThat(viewModel.error.value).contains("更新個人資料失敗")
         assertThat(viewModel.error.value).contains(errorMsg)
     }
+
+    @Test
+    fun `init should handle error when load UserProfile fails`() = runTest {
+        val errorMsg = "Load Failed"
+        every { mockUserProfileRepository.getUserProfile() } returns flow {
+            throw Exception(
+                errorMsg
+            )
+        }
+
+        val errorViewModel = SettingsViewModel(
+            userProfileRepository = mockUserProfileRepository,
+            bodyMeasurementRepository = mockBodyMeasurementRepository
+        )
+
+        assertThat(errorViewModel.error.value).contains("載入個人資料失敗")
+        assertThat(errorViewModel.error.value).contains(errorMsg)
+    }
 }

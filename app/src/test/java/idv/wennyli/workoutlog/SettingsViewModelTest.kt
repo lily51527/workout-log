@@ -18,7 +18,9 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SettingsViewModelTest {
@@ -311,5 +313,84 @@ class SettingsViewModelTest {
 
         assertThat(errorViewModel.error.value).contains("載入個人資料失敗")
         assertThat(errorViewModel.error.value).contains(errorMsg)
+    }
+
+    // --- CORRECT 補強測試 ---
+
+    // [C]onformance: 格式不符 (輸入非數字)
+    @Test
+    fun `addBodyMeasurement should fail when input is not a number`() = runTest {
+        // Arrange
+        val invalidHeight = "abc" // 非數字
+        val validWeight = "70"
+        val validFat = "20"
+
+        // Act
+        viewModel.addBodyMeasurement(invalidHeight, validWeight, validFat)
+
+        // Assert
+        coVerify(exactly = 0) { mockBodyMeasurementRepository.addBodyMeasurement(any()) }
+        assertThat(viewModel.error.value).isEqualTo("請輸入有效的身高和體重")
+    }
+
+    // [E]xistence: 存在性 (輸入空字串)
+    @Test
+    fun `addBodyMeasurement should fail when input is empty`() = runTest {
+        // Arrange
+        val emptyHeight = "" // 空字串
+        val validWeight = "70"
+        val validFat = "20"
+
+        // Act
+        viewModel.addBodyMeasurement(emptyHeight, validWeight, validFat)
+
+        // Assert
+        coVerify(exactly = 0) { mockBodyMeasurementRepository.addBodyMeasurement(any()) }
+        assertThat(viewModel.error.value).isEqualTo("請輸入有效的身高和體重")
+    }
+
+    // [R]ange: 邊界範圍 (剛好是 0)
+    @Test
+    fun `addBodyMeasurement should fail when weight is zero`() = runTest {
+        // Arrange
+        val validHeight = "180"
+        val zeroWeight = "0" // 邊界值
+        val validFat = "20"
+
+        // Act
+        viewModel.addBodyMeasurement(validHeight, zeroWeight, validFat)
+
+        // Assert
+        coVerify(exactly = 0) { mockBodyMeasurementRepository.addBodyMeasurement(any()) }
+        assertThat(viewModel.error.value).isEqualTo("請輸入有效的身高和體重")
+    }
+
+    // [T]ime: 時間格式驗證 (針對 private fun toUiState 的間接測試)
+    @Test
+    fun `measurementUiStateList should format date correctly`() = runTest {
+        // Arrange
+        // 固定一個時間點，例如 2026-02-23
+        val fakeDateString = "2026-02-23"
+        val fixDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).parse(fakeDateString)
+        val measurement =
+            BodyMeasurement(id = "", height = 180.0, weight = 70.0, timestamp = fixDate)
+
+        every { mockBodyMeasurementRepository.getBodyMeasurements() } returns flowOf(
+            listOf(
+                measurement
+            )
+        )
+
+        // Act
+        // 重新 init 讓它讀取這個固定的時間
+        val viewModel = SettingsViewModel(
+            userProfileRepository = mockUserProfileRepository,
+            bodyMeasurementRepository = mockBodyMeasurementRepository
+        )
+
+        // Assert
+        // 驗證我們 private fun toUiState 的邏輯
+        val uiState = viewModel.measurementUiStateList.value.first()
+        assertThat(uiState.formattedDate).isEqualTo(fakeDateString)
     }
 }

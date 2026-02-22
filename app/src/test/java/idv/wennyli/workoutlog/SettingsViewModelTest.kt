@@ -204,6 +204,39 @@ class SettingsViewModelTest {
         assertThat(viewModel.error.value).isEqualTo("體脂肪率不能為負數。")
     }
 
+    // 邊界測試 - 當 UserProfile 尚未載入時的更新行為
+    @Test
+    fun `updateUserProfile should create new profile if current profile is null`() = runTest {
+        // Arrange
+        // 1. 模擬 UserProfileRepository 回傳 null (代表尚未載入或沒有資料)
+        every { mockUserProfileRepository.getUserProfile() } returns flowOf(null)
+
+        // 2. 重新初始化 ViewModel，使其 userProfile 為 null
+        val nullSettingViewModel = SettingsViewModel(
+            userProfileRepository = mockUserProfileRepository,
+            bodyMeasurementRepository = mockBodyMeasurementRepository
+        )
+
+        // 3. 模擬 Repository update 成功
+        coEvery { mockUserProfileRepository.updateUserProfile(any()) } returns Unit
+
+        val newGender = "female"
+
+        // Act
+        nullSettingViewModel.updateUserProfile(gender = newGender)
+
+        // Assert
+        // 驗證 Repository 被呼叫，且資料是基於 "空 Profile" 加上 "新性別"
+        // 預期 birthDate 應該是預設值空字串 ""
+        coVerify(exactly = 1) {
+            mockUserProfileRepository.updateUserProfile(
+                match {
+                    it.gender == newGender && it.birthDate == ""
+                }
+            )
+        }
+    }
+
     // --- Error (錯誤處理測試) ---
 
     @Test

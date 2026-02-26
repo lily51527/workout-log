@@ -30,10 +30,6 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    fun resetState() {
-        _authState.value = AuthState.Idle
-    }
-
     // TODO: 需要將 hardcode 文字轉到 strings.xml 中
     fun registerWithEmail(email: String, password: String) {
         viewModelScope.launch {

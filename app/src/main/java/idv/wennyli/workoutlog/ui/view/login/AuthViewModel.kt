@@ -33,6 +33,7 @@ class AuthViewModel @Inject constructor(
     // TODO: 需要將 hardcode 文字轉到 strings.xml 中
     fun registerWithEmail(email: String, password: String) {
         viewModelScope.launch {
+            _authState.value = AuthState.Loading
             try {
                 auth.createUserWithEmailAndPassword(email, password).await()
                 _authState.value = AuthState.Success

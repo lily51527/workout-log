@@ -1,5 +1,7 @@
 package idv.wennyli.workoutlog.ui.view
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -31,7 +34,6 @@ import idv.wennyli.workoutlog.ui.navigation.BottomNavItem
 import idv.wennyli.workoutlog.ui.navigation.Screen
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Main(
     mainNavController: NavController,
@@ -51,56 +53,18 @@ fun Main(
         }
     }
 
-    val items = listOf(
-        BottomNavItem.Log,
-        BottomNavItem.Timer,
-        BottomNavItem.Settings
-    )
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    val titleId = items.find { it.route == currentDestination?.route }?.labelId
-                        ?: R.string.app_name
-                    Text(text = stringResource(titleId))
-                },
-                actions = {
-                    // 只在設定頁面顯示登出按鈕
-                    if (currentDestination?.route == BottomNavItem.Settings.route) {
-                        IconButton(onClick = {
-                            viewModel.signOut()
-                        }) {
-                            Icon(
-                                painter = painterResource(R.drawable.outline_logout_24),
-                                contentDescription = stringResource(R.string.main_screen_logout)
-                            )
-                        }
-                    }
+    MainScreen(
+        currentRoute = currentDestination?.route,
+        onNavigate = { route ->
+            bottomNavController.navigate(route) {
+                popUpTo(bottomNavController.graph.findStartDestination().id) {
+                    saveState = true
                 }
-            )
-        },
-        bottomBar = {
-            NavigationBar {
-                items.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { painterResource(screen.iconId) },
-                        label = { Text(stringResource(screen.labelId)) },
-                        selected =
-                            currentDestination?.hierarchy?.any { it.route == screen.route } == true,
-                        onClick = {
-                            bottomNavController.navigate(screen.route) {
-                                popUpTo(bottomNavController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        }
-                    )
-                }
+                launchSingleTop = true
+                restoreState = true
             }
-        }
+        },
+        onSignOut = { viewModel.signOut() }
     ) { innerPadding ->
         BottomNavGraph(
             modifier = Modifier.padding(innerPadding),
@@ -109,12 +73,132 @@ fun Main(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainScreen(
+    currentRoute: String?,
+    onNavigate: (String) -> Unit,
+    onSignOut: () -> Unit,
+    content: @Composable (PaddingValues) -> Unit
+) {
+    val items = listOf(
+        BottomNavItem.Log,
+        BottomNavItem.Timer,
+        BottomNavItem.Settings
+    )
+
+    val showMainBar = items.any { it.route == currentRoute }
+
+    Scaffold(
+        topBar = {
+            if (showMainBar) {
+                MainTopAppBar(
+                    currentRoute = currentRoute,
+                    items = items,
+                    onSignOut = onSignOut
+                )
+            }
+        },
+        bottomBar = {
+            if (showMainBar) {
+                MainBottomNavigationBar(
+                    currentRoute = currentRoute,
+                    items = items,
+                    onNavigate = onNavigate
+                )
+            }
+        }
+    ) { innerPadding ->
+        content(innerPadding)
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun MainTopAppBar(
+    currentRoute: String?,
+    items: List<BottomNavItem>,
+    onSignOut: () -> Unit
+) {
+    TopAppBar(
+        title = {
+            val titleId = items.find { it.route == currentRoute }?.labelId ?: R.string.app_name
+            Text(text = stringResource(titleId))
+        },
+        actions = {
+            if (currentRoute == BottomNavItem.Settings.route) {
+                IconButton(onClick = onSignOut) {
+                    Icon(
+                        painter = painterResource(R.drawable.outline_logout_24),
+                        contentDescription = stringResource(R.string.main_screen_logout)
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun MainBottomNavigationBar(
+    currentRoute: String?,
+    items: List<BottomNavItem>,
+    onNavigate: (String) -> Unit
+) {
+    NavigationBar {
+        items.forEach { screen ->
+            NavigationBarItem(
+                icon = {
+                    Icon(
+                        painter = painterResource(screen.iconId),
+                        contentDescription = stringResource(screen.labelId)
+                    )
+                },
+                label = { Text(stringResource(screen.labelId)) },
+                selected = currentRoute == screen.route,
+                onClick = { onNavigate(screen.route) }
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun MainTopAppBarPreview() {
+    WorkoutLogTheme {
+        MainTopAppBar(
+            currentRoute = BottomNavItem.Settings.route,
+            items = listOf(BottomNavItem.Log, BottomNavItem.Timer, BottomNavItem.Settings),
+            onSignOut = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun MainBottomNavigationBarPreview() {
+    WorkoutLogTheme {
+        MainBottomNavigationBar(
+            currentRoute = BottomNavItem.Timer.route,
+            items = listOf(BottomNavItem.Log, BottomNavItem.Timer, BottomNavItem.Settings),
+            onNavigate = {}
+        )
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
     WorkoutLogTheme {
-        // 預覽功能需要一個 NavController，我們可以在這裡建立一個假的實例
-        val navController = rememberNavController()
-        Main(mainNavController = navController)
+        MainScreen(
+            currentRoute = BottomNavItem.Log.route, // 您可以隨便改這個字串來預覽不同狀態
+            onNavigate = {},
+            onSignOut = {}
+        ) { innerPadding ->
+            // 在 Preview 時，我們只塞入一個帶有文字的空盒子！
+            // 這樣就不會觸發任何 Hilt 的呼叫了！
+            Box(modifier = Modifier.padding(innerPadding)) {
+                Text("這是內容區域預覽")
+            }
+        }
     }
 }

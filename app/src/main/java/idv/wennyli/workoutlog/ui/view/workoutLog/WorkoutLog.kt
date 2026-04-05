@@ -51,26 +51,22 @@ import java.util.Locale
 
 @Composable
 fun WorkoutLog(
-    viewModel: WorkoutLogViewModel = hiltViewModel()
+    viewModel: WorkoutLogViewModel = hiltViewModel(),
+    onNavigateToAddWorkout: () -> Unit
 ) {
     val workoutList by viewModel.workouts.collectAsState()
     val loading by viewModel.loading.collectAsState()
     val error by viewModel.error.collectAsState()
     val currentDate by viewModel.currentDate.collectAsState()
 
-    var showAddWorkoutDialog by remember { mutableStateOf(false) }
-
     WorkoutLogScreen(
         workoutList = workoutList,
         loading = loading,
-        showAddWorkoutDialog = showAddWorkoutDialog,
-        onAddWorkout = { viewModel.addWorkout(it) },
-        exerciseToMuscleMap = viewModel.exerciseToMuscleMap,
         error = error,
         currentDate = currentDate,
         onDateSelected = { viewModel.setCurrentDate(it) },
         onDeleteWorkout = { viewModel.deleteWorkout(it) },
-        onShowAddWorkoutDialog = { showAddWorkoutDialog = it },
+        onNavigateToAddWorkout = onNavigateToAddWorkout,
         onErrorClear = { viewModel.clearError() }
     )
 }
@@ -79,14 +75,11 @@ fun WorkoutLog(
 private fun WorkoutLogScreen(
     workoutList: List<Workout>,
     loading: Boolean,
-    showAddWorkoutDialog: Boolean,
-    onAddWorkout: (Workout) -> Unit,
-    exerciseToMuscleMap: Map<String, String>,
     error: String?,
     currentDate: String,
     onDateSelected: (String) -> Unit,
     onDeleteWorkout: (String) -> Unit,
-    onShowAddWorkoutDialog: (Boolean) -> Unit,
+    onNavigateToAddWorkout: () -> Unit,
     onErrorClear: () -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
@@ -111,20 +104,12 @@ private fun WorkoutLogScreen(
         }
 
         FloatingActionButton(
-            onClick = { onShowAddWorkoutDialog(true) },
+            onClick = onNavigateToAddWorkout,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
             Icon(painter = painterResource(R.drawable.add_24px), contentDescription = "新增訓練")
-        }
-
-        if (showAddWorkoutDialog) {
-            AddWorkoutDialog(
-                onDismiss = { onShowAddWorkoutDialog(false) },
-                onAddWorkout = onAddWorkout,
-                exerciseToMuscleMap = exerciseToMuscleMap
-            )
         }
 
         error?.let {
@@ -326,14 +311,11 @@ private fun WorkoutLogScreenPreview() {
         WorkoutLogScreen(
             workoutList = emptyList(),
             loading = false,
-            showAddWorkoutDialog = false,
-            onAddWorkout = {},
-            exerciseToMuscleMap = emptyMap(),
             error = null,
             currentDate = "2023-08-01",
             onDateSelected = {},
             onDeleteWorkout = {},
-            onShowAddWorkoutDialog = {},
+            onNavigateToAddWorkout = {},
             onErrorClear = {}
         )
     }

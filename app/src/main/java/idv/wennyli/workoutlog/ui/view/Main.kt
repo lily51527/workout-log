@@ -2,6 +2,7 @@ package idv.wennyli.workoutlog.ui.view
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -67,7 +68,9 @@ fun Main(
         onSignOut = { viewModel.signOut() }
     ) { innerPadding ->
         BottomNavGraph(
-            modifier = Modifier.padding(innerPadding),
+            modifier = Modifier
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding),
             navController = bottomNavController
         )
     }

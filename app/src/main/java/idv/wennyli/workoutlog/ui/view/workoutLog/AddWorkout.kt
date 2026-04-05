@@ -4,12 +4,14 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -17,12 +19,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -33,19 +38,39 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.Workout
+import idv.wennyli.workoutlog.ui.navigation.BottomNavItem
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
+import idv.wennyli.workoutlog.ui.view.MainTopAppBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
-fun AddWorkoutDialog(
-    onDismiss: () -> Unit,
+fun AddWorkoutRoute(
+    viewModel: WorkoutLogViewModel = hiltViewModel(),
+    onNavigateUp: () -> Unit
+) {
+    AddWorkoutScreen(
+        onNavigateUp = onNavigateUp,
+        onAddWorkout = { workout ->
+            viewModel.addWorkout(workout)
+            onNavigateUp() // 新增完畢後觸發返回
+        },
+        exerciseToMuscleMap = viewModel.exerciseToMuscleMap
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddWorkoutScreen(
+    onNavigateUp: () -> Unit,
     onAddWorkout: (Workout) -> Unit,
     exerciseToMuscleMap: Map<String, String>
 ) {
@@ -81,71 +106,79 @@ fun AddWorkoutDialog(
             ignoreCase = true
         ) && it.isNotBlank()
     }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("新增訓練記錄") },
-        text = {
-            AddWorkoutDialogContent(
-                date = addWorkoutDate,
-                exercise = exercise,
-                muscleGroup = muscleGroup,
-                weight = weight,
-                sets = sets,
-                reps = reps,
-                repsUnit = repsUnit,
-                muscleFeel = muscleFeel,
-                control = control,
-                notes = notes,
-                exerciseInputExpanded = exerciseInputExpanded,
-                repsUnitExpanded = repsUnitExpanded,
-                filteredSuggestions = filteredSuggestions,
-                onDateChange = { addWorkoutDate = it },
-                onExerciseChange = { exercise = it },
-                onExerciseExpandedChange = { exerciseInputExpanded = it },
-                onRepsUnitExpandedChange = { repsUnitExpanded = it },
-                onMuscleGroupChange = { muscleGroup = it },
-                onWeightChange = { weight = it },
-                onSetsChange = { sets = it },
-                onRepsChange = { reps = it },
-                onMuscleFeelChange = { muscleFeel = it },
-                onControlChange = { control = it },
-                onNotesChange = { notes = it },
-                onUnitSelected = { repsUnit = it }
-            )
-        },
-        confirmButton = {
-            Button(
-                onClick = {
-                    val newWorkout = Workout(
-                        date = addWorkoutDate,
-                        exercise = exercise,
-                        muscleGroup = muscleGroup,
-                        weight = weight.toDoubleOrNull() ?: 0.0,
-                        sets = sets.toIntOrNull() ?: 0,
-                        reps = reps.toIntOrNull() ?: 0,
-                        repsUnit = repsUnit,
-                        muscleFeel = muscleFeel,
-                        control = control,
-                        notes = notes
-                    )
-                    onAddWorkout(newWorkout)
-                    onDismiss()
-                }
-            ) {
-                Text("新增")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("取消")
-            }
+    Scaffold(
+        topBar = {
+            AddWorkoutTopAppBar(onNavigateUp = onNavigateUp)
         }
-    )
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Spacer(modifier = Modifier.height(8.dp))
+
+                AddWorkoutContent(
+                    date = addWorkoutDate,
+                    exercise = exercise,
+                    muscleGroup = muscleGroup,
+                    weight = weight,
+                    sets = sets,
+                    reps = reps,
+                    repsUnit = repsUnit,
+                    muscleFeel = muscleFeel,
+                    control = control,
+                    notes = notes,
+                    exerciseInputExpanded = exerciseInputExpanded,
+                    repsUnitExpanded = repsUnitExpanded,
+                    filteredSuggestions = filteredSuggestions,
+                    onDateChange = { addWorkoutDate = it },
+                    onExerciseChange = { exercise = it },
+                    onExerciseExpandedChange = { exerciseInputExpanded = it },
+                    onRepsUnitExpandedChange = { repsUnitExpanded = it },
+                    onMuscleGroupChange = { muscleGroup = it },
+                    onWeightChange = { weight = it },
+                    onSetsChange = { sets = it },
+                    onRepsChange = { reps = it },
+                    onMuscleFeelChange = { muscleFeel = it },
+                    onControlChange = { control = it },
+                    onNotesChange = { notes = it },
+                    onUnitSelected = { repsUnit = it }
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+            }
+
+            // 新增按鈕放在頁面底部
+            AddWorkoutButton(
+                newWorkout = Workout(
+                    date = addWorkoutDate,
+                    exercise = exercise,
+                    muscleGroup = muscleGroup,
+                    weight = weight.toDoubleOrNull() ?: 0.0,
+                    sets = sets.toIntOrNull() ?: 0,
+                    reps = reps.toIntOrNull() ?: 0,
+                    repsUnit = repsUnit,
+                    muscleFeel = muscleFeel,
+                    control = control,
+                    notes = notes
+                ),
+                onAddWorkout = onAddWorkout
+            )
+        }
+    }
 }
 
 @Composable
-private fun AddWorkoutDialogContent(
+private fun AddWorkoutContent(
     date: String,
     exercise: String,
     muscleGroup: String,
@@ -173,7 +206,7 @@ private fun AddWorkoutDialogContent(
     onUnitSelected: (String) -> Unit,
 ) {
     Column(
-        modifier = Modifier.verticalScroll(rememberScrollState())
+        modifier = Modifier.fillMaxWidth()
     ) {
         OutlinedTextField(
             value = date,
@@ -293,7 +326,10 @@ private fun RepsUnitDropDown(
             onClick = { onExpandedChange(true) }
         ) {
             Text(selectedUnit)
-            Icon(painter = painterResource(R.drawable.arrow_drop_down_24px), contentDescription = null)
+            Icon(
+                painter = painterResource(R.drawable.arrow_drop_down_24px),
+                contentDescription = null
+            )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
             DropdownMenuItem(
@@ -333,6 +369,49 @@ private fun RatingInput(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun AddWorkoutButton(
+    newWorkout: Workout,
+    onAddWorkout: (Workout) -> Unit
+) {
+    Button(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = 24.dp, top = 8.dp),
+        onClick = {
+            onAddWorkout(newWorkout)
+        }
+    ) {
+        Text("新增")
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AddWorkoutTopAppBar(
+    onNavigateUp: () -> Unit
+) {
+    TopAppBar(
+        title = { Text("新增訓練記錄") },
+        navigationIcon = {
+            IconButton(onClick = onNavigateUp) {
+                Icon(
+                    painter = painterResource(R.drawable.arrow_back_24px),
+                    contentDescription = "返回"
+                )
+            }
+        }
+    )
+}
+
+@Preview
+@Composable
+fun AddWorkoutTopAppBarPreview() {
+    WorkoutLogTheme {
+        AddWorkoutTopAppBar(onNavigateUp = {})
     }
 }
 
@@ -377,9 +456,9 @@ private fun RatingInputPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AddWorkoutDialogPreview() {
+private fun AddWorkoutContentPreview() {
     WorkoutLogTheme {
-        AddWorkoutDialogContent(
+        AddWorkoutContent(
             date = "2023-09-03",
             exercise = "引體向上",
             muscleGroup = "三角肌 (前束)",
@@ -405,6 +484,33 @@ private fun AddWorkoutDialogPreview() {
             onControlChange = {},
             onRepsChange = {},
             onUnitSelected = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun AddWorkoutButton() {
+    WorkoutLogTheme {
+        AddWorkoutButton(
+            newWorkout = Workout(),
+            onAddWorkout = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+private fun AddWorkoutScreenPreview() {
+    WorkoutLogTheme {
+        AddWorkoutScreen(
+            onNavigateUp = {},
+            onAddWorkout = {},
+            exerciseToMuscleMap = mapOf( // 提供一點假資料讓下拉選單有東西顯示
+                "臥推" to "胸大肌, 三頭肌",
+                "深蹲" to "股四頭肌, 臀大肌",
+                "引體向上" to "闊背肌, 二頭肌"
+            )
         )
     }
 }

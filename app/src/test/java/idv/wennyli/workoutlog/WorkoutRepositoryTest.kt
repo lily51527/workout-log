@@ -252,12 +252,13 @@ class WorkoutRepositoryTest {
         val newWorkout = Workout(timestamp = Date(200L), userId = "")
         repository.addWorkout(newWorkout)
 
+        verify(exactly = 1) { mockFirestore.collection("artifacts/$fakeAppId/users/$fakeUserId/workouts") }
         verify(exactly = 1) { mockCollectionReference.document() }
 
-        val measurementSlot = slot<Workout>()
-        verify(exactly = 1) { mockDocumentReference.set(capture(measurementSlot)) }
+        val workoutSlot = slot<Workout>()
+        verify(exactly = 1) { mockDocumentReference.set(capture(workoutSlot)) }
 
-        val capturedWorkout = measurementSlot.captured
+        val capturedWorkout = workoutSlot.captured
         assertThat(capturedWorkout.id).isEqualTo(fakeGeneratedId)
         assertThat(capturedWorkout.userId).isEqualTo(fakeUserId)
     }
@@ -270,6 +271,28 @@ class WorkoutRepositoryTest {
         repository.addWorkout(newWorkout)
 
         verify(exactly = 0) { mockFirestore.collection(any()) }
+    }
+
+    @Test
+    fun `updateWorkout should call update with correct workout`() = runTest {
+        every { mockFirestore.collection(any()) } returns mockCollectionReference
+        every { mockCollectionReference.document(any()) } returns mockDocumentReference
+        every { mockDocumentReference.set(any()) } returns Tasks.forResult(null)
+
+        val fakeWorkoutId = "generated_id_123"
+        val updateWorkout =
+            Workout(timestamp = Date(200L), userId = fakeUserId, id = fakeWorkoutId, exercise = "abc")
+        repository.updateWorkout(updateWorkout)
+
+        verify(exactly = 1) { mockFirestore.collection("artifacts/$fakeAppId/users/$fakeUserId/workouts") }
+
+        verify(exactly = 1) { mockCollectionReference.document(fakeWorkoutId) }
+
+        val workoutSlot = slot<Workout>()
+        verify(exactly = 1) { mockDocumentReference.set(capture(workoutSlot)) }
+
+        val capturedWorkout = workoutSlot.captured
+        assertThat(capturedWorkout).isEqualTo(updateWorkout)
     }
 
     @Test

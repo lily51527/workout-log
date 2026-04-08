@@ -22,6 +22,7 @@ interface WorkoutRepository {
     // 訓練記錄相關
     fun getWorkouts(): Flow<List<Workout>>
     suspend fun addWorkout(workout: Workout)
+    suspend fun updateWorkout(workout: Workout)
     suspend fun deleteWorkout(workoutId: String)
 }
 
@@ -67,6 +68,14 @@ class WorkoutRepositoryImpl @Inject constructor(
             val newWorkoutRef = firestore.collection(collectionPath).document()
             val finalMeasurement = workout.copy(id = newWorkoutRef.id, userId = it)
             newWorkoutRef.set(finalMeasurement).await()
+        }
+    }
+
+    override suspend fun updateWorkout(workout: Workout) {
+        userId?.let {
+            val collectionPath = "artifacts/$appId/users/$it/workouts"
+            val newWorkoutRef = firestore.collection(collectionPath).document(workout.id)
+            newWorkoutRef.set(workout).await()
         }
     }
 

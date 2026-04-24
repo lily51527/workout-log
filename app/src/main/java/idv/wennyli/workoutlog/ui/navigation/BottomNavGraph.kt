@@ -95,10 +95,8 @@ fun BottomNavGraph(
                     animationSpec = tween(durationMillis = 300)
                 )
             }
-        ) { backStackEntry ->
-            val workoutId = backStackEntry.arguments?.getString(WorkoutDestinations.WORKOUT_ID_ARG)
+        ) {
             AddWorkoutRoute(
-                workoutId = workoutId,
                 onNavigateUp = {
                     navController.popBackStack()
                 }

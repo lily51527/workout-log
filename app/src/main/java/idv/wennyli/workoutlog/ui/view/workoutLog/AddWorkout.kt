@@ -47,28 +47,21 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.Workout
-import idv.wennyli.workoutlog.ui.navigation.BottomNavItem
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
-import idv.wennyli.workoutlog.ui.view.MainTopAppBar
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 @Composable
 fun AddWorkoutRoute(
-    workoutId: String? = null,
-    viewModel: WorkoutLogViewModel = hiltViewModel(),
+    viewModel: AddWorkoutViewModel = hiltViewModel(),
     onNavigateUp: () -> Unit
 ) {
-    val isEditMode = workoutId != null
-    val loading by viewModel.loading.collectAsState()
-    val workouts by viewModel.workouts.collectAsState()
-
-    // 從已載入的清單中找到要編輯的資料
-    val workoutToEdit = if (isEditMode) workouts.find { it.id == workoutId } else null
+    val isLoading by viewModel.isLoading.collectAsState()
+    val workoutToEdit by viewModel.workoutToEdit.collectAsState()
 
     // 編輯模式且資料尚未載入完成時，顯示 loading 畫面
-    if (isEditMode && workoutToEdit == null && loading) {
+    if (viewModel.isEditMode && isLoading) {
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
@@ -79,18 +72,11 @@ fun AddWorkoutRoute(
     }
 
     AddWorkoutScreen(
-        isEditMode = isEditMode,
+        isEditMode = viewModel.isEditMode,
         initialWorkout = workoutToEdit,
         onNavigateUp = onNavigateUp,
         onSaveWorkout = { workout ->
-            if (isEditMode && workoutToEdit != null) {
-                // 更新時保留原始的 id 與 userId
-                viewModel.updateWorkout(
-                    workout.copy(id = workoutToEdit.id, userId = workoutToEdit.userId)
-                )
-            } else {
-                viewModel.addWorkout(workout)
-            }
+            viewModel.saveWorkout(workout)
             onNavigateUp()
         },
         exerciseToMuscleMap = viewModel.exerciseToMuscleMap

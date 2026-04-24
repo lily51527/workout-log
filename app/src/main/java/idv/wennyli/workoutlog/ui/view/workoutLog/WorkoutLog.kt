@@ -3,6 +3,7 @@ package idv.wennyli.workoutlog.ui.view.workoutLog
 import android.app.DatePickerDialog
 import android.util.Log
 import android.widget.DatePicker
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -52,7 +53,8 @@ import java.util.Locale
 @Composable
 fun WorkoutLog(
     viewModel: WorkoutLogViewModel = hiltViewModel(),
-    onNavigateToAddWorkout: () -> Unit
+    onNavigateToAddWorkout: () -> Unit,
+    onNavigateToEditWorkout: (String) -> Unit
 ) {
     val workoutList by viewModel.workouts.collectAsState()
     val loading by viewModel.loading.collectAsState()
@@ -66,6 +68,7 @@ fun WorkoutLog(
         currentDate = currentDate,
         onDateSelected = { viewModel.setCurrentDate(it) },
         onDeleteWorkout = { viewModel.deleteWorkout(it) },
+        onEditWorkout = onNavigateToEditWorkout,
         onNavigateToAddWorkout = onNavigateToAddWorkout,
         onErrorClear = { viewModel.clearError() }
     )
@@ -79,6 +82,7 @@ private fun WorkoutLogScreen(
     currentDate: String,
     onDateSelected: (String) -> Unit,
     onDeleteWorkout: (String) -> Unit,
+    onEditWorkout: (String) -> Unit,
     onNavigateToAddWorkout: () -> Unit,
     onErrorClear: () -> Unit
 ) {
@@ -98,7 +102,8 @@ private fun WorkoutLogScreen(
                 Spacer(modifier = Modifier.padding(8.dp))
                 WorkoutList(
                     workoutList = workoutList.filter { it.date == currentDate },
-                    onDeleteWorkout = onDeleteWorkout
+                    onDeleteWorkout = onDeleteWorkout,
+                    onEditWorkout = onEditWorkout
                 )
             }
         }
@@ -171,7 +176,8 @@ private fun DateSelector(
 @Composable
 private fun WorkoutList(
     workoutList: List<Workout>,
-    onDeleteWorkout: (String) -> Unit
+    onDeleteWorkout: (String) -> Unit,
+    onEditWorkout: (String) -> Unit
 ) {
     if (workoutList.isEmpty()) {
         Box(
@@ -185,7 +191,8 @@ private fun WorkoutList(
             items(workoutList, key = { it.id }) { workout ->
                 WorkoutItem(
                     workout = workout,
-                    onDeleteWorkout = onDeleteWorkout
+                    onDeleteWorkout = onDeleteWorkout,
+                    onEditWorkout = onEditWorkout
                 )
                 HorizontalDivider()
             }
@@ -196,12 +203,14 @@ private fun WorkoutList(
 @Composable
 private fun WorkoutItem(
     workout: Workout,
-    onDeleteWorkout: (String) -> Unit
+    onDeleteWorkout: (String) -> Unit,
+    onEditWorkout: (String) -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 16.dp),
+            .padding(vertical = 16.dp)
+            .clickable { onEditWorkout(workout.id) },
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -261,7 +270,8 @@ private fun WorkoutItemPreview() {
                 control = 3,
                 notes = "remark"
             ),
-            onDeleteWorkout = {}
+            onDeleteWorkout = {},
+            onEditWorkout = {}
         )
     }
 }
@@ -299,7 +309,8 @@ private fun WorkoutListPreview() {
                     notes = "remark"
                 )
             ),
-            onDeleteWorkout = {}
+            onDeleteWorkout = {},
+            onEditWorkout = {}
         )
     }
 }
@@ -315,6 +326,7 @@ private fun WorkoutLogScreenPreview() {
             currentDate = "2023-08-01",
             onDateSelected = {},
             onDeleteWorkout = {},
+            onEditWorkout = {},
             onNavigateToAddWorkout = {},
             onErrorClear = {}
         )

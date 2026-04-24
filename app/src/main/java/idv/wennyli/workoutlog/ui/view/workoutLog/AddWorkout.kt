@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,14 +56,42 @@ import java.util.Locale
 
 @Composable
 fun AddWorkoutRoute(
+    workoutId: String? = null,
     viewModel: WorkoutLogViewModel = hiltViewModel(),
     onNavigateUp: () -> Unit
 ) {
+    val isEditMode = workoutId != null
+    val loading by viewModel.loading.collectAsState()
+    val workouts by viewModel.workouts.collectAsState()
+
+    // 從已載入的清單中找到要編輯的資料
+    val workoutToEdit = if (isEditMode) workouts.find { it.id == workoutId } else null
+
+    // 編輯模式且資料尚未載入完成時，顯示 loading 畫面
+    if (isEditMode && workoutToEdit == null && loading) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
+        return
+    }
+
     AddWorkoutScreen(
+        isEditMode = isEditMode,
+        initialWorkout = workoutToEdit,
         onNavigateUp = onNavigateUp,
-        onAddWorkout = { workout ->
-            viewModel.addWorkout(workout)
-            onNavigateUp() // 新增完畢後觸發返回
+        onSaveWorkout = { workout ->
+            if (isEditMode && workoutToEdit != null) {
+                // 更新時保留原始的 id 與 userId
+                viewModel.updateWorkout(
+                    workout.copy(id = workoutToEdit.id, userId = workoutToEdit.userId)
+                )
+            } else {
+                viewModel.addWorkout(workout)
+            }
+            onNavigateUp()
         },
         exerciseToMuscleMap = viewModel.exerciseToMuscleMap
     )
@@ -70,27 +100,35 @@ fun AddWorkoutRoute(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddWorkoutScreen(
+    isEditMode: Boolean = false,
+    initialWorkout: Workout? = null,
     onNavigateUp: () -> Unit,
-    onAddWorkout: (Workout) -> Unit,
+    onSaveWorkout: (Workout) -> Unit,
     exerciseToMuscleMap: Map<String, String>
 ) {
     var addWorkoutDate by remember {
         mutableStateOf(
-            SimpleDateFormat(
-                "yyyy-MM-dd",
-                Locale.US
-            ).format(Date())
+            initialWorkout?.date ?: SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         )
     }
-    var exercise by remember { mutableStateOf("") }
-    var muscleGroup by remember { mutableStateOf("") }
-    var weight by remember { mutableStateOf("") }
-    var sets by remember { mutableStateOf("") }
-    var reps by remember { mutableStateOf("") }
-    var repsUnit by remember { mutableStateOf("次數") }
-    var muscleFeel by remember { mutableIntStateOf(3) }
-    var control by remember { mutableIntStateOf(3) }
-    var notes by remember { mutableStateOf("") }
+    var exercise by remember { mutableStateOf(initialWorkout?.exercise ?: "") }
+    var muscleGroup by remember { mutableStateOf(initialWorkout?.muscleGroup ?: "") }
+    var weight by remember {
+        mutableStateOf(initialWorkout?.weight?.let { if (it == 0.0) "" else it.toString() } ?: "")
+    }
+    var sets by remember {
+        mutableStateOf(initialWorkout?.sets?.let { if (it == 0) "" else it.toString() } ?: "")
+    }
+    var reps by remember {
+        mutableStateOf(initialWorkout?.reps?.let { if (it == 0) "" else it.toString() } ?: "")
+    }
+    var repsUnit by remember { mutableStateOf(initialWorkout?.repsUnit ?: "次數") }
+    var muscleFeel by remember { mutableIntStateOf(initialWorkout?.muscleFeel ?: 3) }
+    var control by remember { mutableIntStateOf(initialWorkout?.control ?: 3) }
+    var notes by remember { mutableStateOf(initialWorkout?.notes ?: "") }
+
+    val topBarTitle = if (isEditMode) "編輯訓練紀錄" else "新增訓練記錄"
+    val buttonText = if (isEditMode) "儲存" else "新增"
 
     var exerciseInputExpanded by remember { mutableStateOf(false) }
     var repsUnitExpanded by remember { mutableStateOf(false) }
@@ -108,7 +146,7 @@ fun AddWorkoutScreen(
     }
     Scaffold(
         topBar = {
-            AddWorkoutTopAppBar(onNavigateUp = onNavigateUp)
+            AddWorkoutTopAppBar(title = topBarTitle, onNavigateUp = onNavigateUp)
         }
     ) { innerPadding ->
         Column(
@@ -157,8 +195,9 @@ fun AddWorkoutScreen(
 
             }
 
-            // 新增按鈕放在頁面底部
+            // 確認按鈕放在頁面底部
             AddWorkoutButton(
+                buttonText = buttonText,
                 newWorkout = Workout(
                     date = addWorkoutDate,
                     exercise = exercise,
@@ -171,7 +210,7 @@ fun AddWorkoutScreen(
                     control = control,
                     notes = notes
                 ),
-                onAddWorkout = onAddWorkout
+                onSaveWorkout = onSaveWorkout
             )
         }
     }
@@ -374,28 +413,30 @@ private fun RatingInput(
 
 @Composable
 private fun AddWorkoutButton(
+    buttonText: String,
     newWorkout: Workout,
-    onAddWorkout: (Workout) -> Unit
+    onSaveWorkout: (Workout) -> Unit
 ) {
     Button(
         modifier = Modifier
             .fillMaxWidth()
             .padding(bottom = 24.dp, top = 8.dp),
         onClick = {
-            onAddWorkout(newWorkout)
+            onSaveWorkout(newWorkout)
         }
     ) {
-        Text("新增")
+        Text(buttonText)
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddWorkoutTopAppBar(
+    title: String,
     onNavigateUp: () -> Unit
 ) {
     TopAppBar(
-        title = { Text("新增訓練記錄") },
+        title = { Text(title) },
         navigationIcon = {
             IconButton(onClick = onNavigateUp) {
                 Icon(
@@ -411,7 +452,7 @@ fun AddWorkoutTopAppBar(
 @Composable
 fun AddWorkoutTopAppBarPreview() {
     WorkoutLogTheme {
-        AddWorkoutTopAppBar(onNavigateUp = {})
+        AddWorkoutTopAppBar(title = "新增訓練記錄", onNavigateUp = {})
     }
 }
 
@@ -490,11 +531,12 @@ private fun AddWorkoutContentPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun AddWorkoutButton() {
+private fun AddWorkoutButtonPreview() {
     WorkoutLogTheme {
         AddWorkoutButton(
+            buttonText = "新增",
             newWorkout = Workout(),
-            onAddWorkout = {}
+            onSaveWorkout = {}
         )
     }
 }
@@ -505,7 +547,7 @@ private fun AddWorkoutScreenPreview() {
     WorkoutLogTheme {
         AddWorkoutScreen(
             onNavigateUp = {},
-            onAddWorkout = {},
+            onSaveWorkout = {},
             exerciseToMuscleMap = mapOf( // 提供一點假資料讓下拉選單有東西顯示
                 "臥推" to "胸大肌, 三頭肌",
                 "深蹲" to "股四頭肌, 臀大肌",

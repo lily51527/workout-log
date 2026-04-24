@@ -33,9 +33,6 @@ class WorkoutLogViewModel @Inject constructor(
     private val _currentDate = MutableStateFlow<String>(getCurrentDateString())
     val currentDate: StateFlow<String> = _currentDate.asStateFlow()
 
-    // 預定義的訓練動作與肌群對應表
-    val exerciseToMuscleMap = exerciseRepository.getExerciseToMuscleMap()
-
     init {
         loadWorkouts()
     }
@@ -46,26 +43,6 @@ class WorkoutLogViewModel @Inject constructor(
             workoutRepository.getWorkouts().collect { workouts ->
                 _workouts.value = workouts
                 _loading.value = false
-            }
-        }
-    }
-
-    fun addWorkout(workout: Workout) {
-        viewModelScope.launch {
-            try {
-                workoutRepository.addWorkout(workout)
-            } catch (e: Exception) {
-                _error.value = "新增訓練失敗: ${e.message}"
-            }
-        }
-    }
-
-    fun updateWorkout(workout: Workout) {
-        viewModelScope.launch {
-            try {
-                workoutRepository.updateWorkout(workout)
-            } catch (e: Exception) {
-                _error.value = "更新訓練失敗: ${e.message}"
             }
         }
     }

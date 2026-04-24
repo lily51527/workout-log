@@ -281,7 +281,12 @@ class WorkoutRepositoryTest {
 
         val fakeWorkoutId = "generated_id_123"
         val updateWorkout =
-            Workout(timestamp = Date(200L), userId = fakeUserId, id = fakeWorkoutId, exercise = "abc")
+            Workout(
+                timestamp = Date(200L),
+                userId = fakeUserId,
+                id = fakeWorkoutId,
+                exercise = "abc"
+            )
         repository.updateWorkout(updateWorkout)
 
         verify(exactly = 1) { mockFirestore.collection("artifacts/$fakeAppId/users/$fakeUserId/workouts") }
@@ -293,6 +298,16 @@ class WorkoutRepositoryTest {
 
         val capturedWorkout = workoutSlot.captured
         assertThat(capturedWorkout).isEqualTo(updateWorkout)
+    }
+
+    @Test
+    fun `updateWorkout does nothing if user is not logged in`() = runTest {
+        every { mockAuth.currentUser } returns null
+
+        val updateWorkout = Workout(id = "workout_id_123", timestamp = Date(3L))
+        repository.updateWorkout(updateWorkout)
+
+        verify(exactly = 0) { mockFirestore.collection(any()) }
     }
 
     @Test

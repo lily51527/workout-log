@@ -58,6 +58,16 @@ class WorkoutLogViewModel @Inject constructor(
         }
     }
 
+    fun updateWorkout(workout: Workout) {
+        viewModelScope.launch {
+            try {
+                workoutRepository.updateWorkout(workout)
+            } catch (e: Exception) {
+                _error.value = "更新訓練失敗: ${e.message}"
+            }
+        }
+    }
+
     fun deleteWorkout(workoutId: String) {
         viewModelScope.launch {
             try {

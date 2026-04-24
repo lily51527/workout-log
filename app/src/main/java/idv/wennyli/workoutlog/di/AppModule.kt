@@ -11,6 +11,8 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepository
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepositoryImpl
+import idv.wennyli.workoutlog.data.repository.ExerciseRepository
+import idv.wennyli.workoutlog.data.repository.ExerciseRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.UserProfileRepository
 import idv.wennyli.workoutlog.data.repository.UserProfileRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.WorkoutRepository
@@ -53,4 +55,8 @@ object AppModule {
         firestore: FirebaseFirestore,
         @Named("appId") appId: String
     ): BodyMeasurementRepository = BodyMeasurementRepositoryImpl(auth, firestore, appId)
+
+    @Provides
+    @Singleton
+    fun provideExerciseRepository(): ExerciseRepository = ExerciseRepositoryImpl()
 }

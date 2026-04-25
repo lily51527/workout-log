@@ -1,11 +1,13 @@
 package idv.wennyli.workoutlog
 
 import com.google.common.truth.Truth.assertThat
+import idv.wennyli.workoutlog.data.repository.ExerciseRepository
 import idv.wennyli.workoutlog.data.repository.WorkoutRepository
 import idv.wennyli.workoutlog.ui.view.timer.TimerState
 import idv.wennyli.workoutlog.ui.view.timer.TimerViewModel
 import idv.wennyli.workoutlog.utils.MainDispatcherRule
 import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -19,13 +21,15 @@ class TimerViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private lateinit var mockRepository: WorkoutRepository
+    private lateinit var mockWorkoutRepository: WorkoutRepository
+    private lateinit var mockExerciseRepository: ExerciseRepository
     private lateinit var viewModel: TimerViewModel
 
     @Before
     fun setup() {
-        mockRepository = mockk(relaxed = true)
-        viewModel = TimerViewModel(mockRepository)
+        mockWorkoutRepository = mockk(relaxed = true)
+        mockExerciseRepository = mockk(relaxed = true)
+        viewModel = TimerViewModel(mockWorkoutRepository, mockExerciseRepository)
     }
 
     // 驗證 ViewModel 初始化後，狀態為 IDLE 且所有欄位皆為預設值
@@ -87,7 +91,7 @@ class TimerViewModelTest {
         viewModel.onStartSet() // Sets state to WORKING
         viewModel.onRestTimeChange(45)
         viewModel.onStartRest()
-        
+
         assertThat(viewModel.timerState.value).isEqualTo(TimerState.RESTING)
         assertThat(viewModel.timeLeft.value).isEqualTo(45)
     }
@@ -106,9 +110,9 @@ class TimerViewModelTest {
         viewModel.onTotalSetsChange(2)
         viewModel.onStartSet() // currentSet = 1, state = WORKING
         viewModel.onStartRest() // state = RESTING, timeLeft = 60
-        
+
         viewModel.onSkipRest()
-        
+
         assertThat(viewModel.timeLeft.value).isEqualTo(0)
         assertThat(viewModel.timerState.value).isEqualTo(TimerState.WORKING)
     }
@@ -119,9 +123,9 @@ class TimerViewModelTest {
         viewModel.onTotalSetsChange(1)
         viewModel.onStartSet() // currentSet = 1, state = WORKING
         viewModel.onStartRest() // state = RESTING, timeLeft = 60
-        
+
         viewModel.onSkipRest()
-        
+
         assertThat(viewModel.timerState.value).isEqualTo(TimerState.FINISHED)
     }
 
@@ -131,7 +135,7 @@ class TimerViewModelTest {
         viewModel.onExerciseNameChange("Squat")
         viewModel.onStartSet()
         viewModel.onReset()
-        
+
         assertThat(viewModel.exerciseName.value).isEmpty()
         assertThat(viewModel.currentSet.value).isEqualTo(0)
         assertThat(viewModel.timerState.value).isEqualTo(TimerState.IDLE)
@@ -144,17 +148,20 @@ class TimerViewModelTest {
     // 驗證儲存訓練時呼叫 repository，並在成功後顯示確認提示
     @Test
     fun `saveWorkout should call repository and show confirmation on success`() = runTest {
+        every { mockExerciseRepository.getExerciseToMuscleMap() } returns
+                mapOf("臥推" to "胸大肌 (中束), 三角肌 (前束), 三頭肌")
+
         viewModel.onExerciseNameChange("臥推")
         viewModel.onStartSet() // currentSet = 1
-        
+
         viewModel.saveWorkout()
-        
-        coVerify { 
-            mockRepository.addWorkout(match { 
-                it.exercise == "臥推" && 
-                it.muscleGroup.contains("胸大肌") &&
-                it.sets == 1
-            }) 
+
+        coVerify {
+            mockWorkoutRepository.addWorkout(match {
+                it.exercise == "臥推" &&
+                        it.muscleGroup.contains("胸大肌") &&
+                        it.sets == 1
+            })
         }
         assertThat(viewModel.showSaveConfirmation.value).isTrue()
     }
@@ -164,10 +171,10 @@ class TimerViewModelTest {
     fun `saveWorkout should not call repository if exerciseName is blank`() = runTest {
         viewModel.onExerciseNameChange("")
         viewModel.onStartSet()
-        
+
         viewModel.saveWorkout()
-        
-        coVerify(exactly = 0) { mockRepository.addWorkout(any()) }
+
+        coVerify(exactly = 0) { mockWorkoutRepository.addWorkout(any()) }
         assertThat(viewModel.showSaveConfirmation.value).isFalse()
     }
 
@@ -176,10 +183,10 @@ class TimerViewModelTest {
     fun `saveWorkout should not call repository if currentSet is 0`() = runTest {
         viewModel.onExerciseNameChange("臥推")
         // currentSet is 0 by default
-        
+
         viewModel.saveWorkout()
-        
-        coVerify(exactly = 0) { mockRepository.addWorkout(any()) }
+
+        coVerify(exactly = 0) { mockWorkoutRepository.addWorkout(any()) }
         assertThat(viewModel.showSaveConfirmation.value).isFalse()
     }
 }

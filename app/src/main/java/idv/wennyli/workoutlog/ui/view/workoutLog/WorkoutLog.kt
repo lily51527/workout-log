@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -114,17 +115,17 @@ private fun WorkoutLogScreen(
                 .align(Alignment.BottomEnd)
                 .padding(16.dp)
         ) {
-            Icon(painter = painterResource(R.drawable.add_24px), contentDescription = "新增訓練")
+            Icon(painter = painterResource(R.drawable.add_24px), contentDescription = stringResource(R.string.workout_log_add_workout_cd))
         }
 
         error?.let {
             AlertDialog(
                 onDismissRequest = onErrorClear,
-                title = { Text("錯誤") },
+                title = { Text(stringResource(R.string.common_error_title)) },
                 text = { Text(it) },
                 confirmButton = {
                     Button(onClick = onErrorClear) {
-                        Text("確定")
+                        Text(stringResource(R.string.common_confirm))
                     }
                 }
             )
@@ -163,13 +164,13 @@ private fun DateSelector(
     ) {
         Icon(
             painter = painterResource(R.drawable.calendar_month_24px),
-            contentDescription = "選擇日期",
+            contentDescription = stringResource(R.string.workout_log_select_date_cd),
             modifier = Modifier.size(
                 ButtonDefaults.IconSize
             )
         )
         Spacer(modifier = Modifier.size(ButtonDefaults.IconSpacing))
-        Text("目前日期: $currentDate")
+        Text(stringResource(R.string.workout_log_current_date, currentDate))
     }
 }
 
@@ -184,7 +185,7 @@ private fun WorkoutList(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Text("此日期沒有訓練記錄。")
+            Text(stringResource(R.string.workout_log_empty))
         }
     } else {
         LazyColumn {
@@ -230,21 +231,21 @@ private fun WorkoutItem(
                 Text(workout.exercise, style = MaterialTheme.typography.titleMedium)
                 Text(workout.muscleGroup, style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    "重量: ${workout.weight}kg, 組數: ${workout.sets}, 次數/時間: ${workout.reps} ${workout.repsUnit}",
+                    stringResource(R.string.workout_log_item_stats, workout.weight, workout.sets, workout.reps, workout.repsUnit),
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    "感覺: ${workout.muscleFeel}/5, 控制: ${workout.control}/5",
+                    stringResource(R.string.workout_log_item_feel, workout.muscleFeel, workout.control),
                     style = MaterialTheme.typography.bodySmall
                 )
                 if (workout.notes.isNotBlank()) {
-                    Text("備註: ${workout.notes}", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.workout_log_item_notes, workout.notes), style = MaterialTheme.typography.bodySmall)
                 }
             }
             IconButton(onClick = { onDeleteWorkout(workout.id) }) {
                 Icon(
                     painter = painterResource(R.drawable.delete_24px),
-                    contentDescription = "刪除訓練",
+                    contentDescription = stringResource(R.string.workout_log_delete_cd),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

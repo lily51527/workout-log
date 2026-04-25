@@ -137,7 +137,7 @@ private fun SettingsScreen(
 
         // 歷史記錄列表
         item {
-            Text("歷史記錄", style = MaterialTheme.typography.titleLarge)
+            Text(stringResource(R.string.settings_history_title), style = MaterialTheme.typography.titleLarge)
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
         }
 
@@ -147,7 +147,7 @@ private fun SettingsScreen(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("尚未有任何記錄。")
+                    Text(stringResource(R.string.settings_empty_history))
                 }
             }
         } else {
@@ -164,11 +164,11 @@ private fun SettingsScreen(
     error?.let {
         AlertDialog(
             onDismissRequest = onClearError,
-            title = { Text("錯誤") },
+            title = { Text(stringResource(R.string.common_error_title)) },
             text = { Text(it) },
             confirmButton = {
                 Button(onClick = onClearError) {
-                    Text("確定")
+                    Text(stringResource(R.string.common_confirm))
                 }
             }
         )
@@ -261,13 +261,13 @@ private fun ProfileCard(
             ) {
                 Icon(
                     painterResource(R.drawable.calendar_month_24px),
-                    contentDescription = "選擇日期",
+                    contentDescription = stringResource(R.string.settings_select_date_cd),
                     modifier = Modifier.size(
                         ButtonDefaults.IconSize
                     )
                 )
                 Spacer(modifier = Modifier.size(ButtonDefaults.IconSize))
-                Text(birthDate.ifBlank { "請選擇日期" })
+                Text(birthDate.ifBlank { stringResource(R.string.settings_select_date_placeholder) })
             }
         }
     }
@@ -289,13 +289,13 @@ private fun MeasurementInputCard(
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
-            Text("記錄目前身體數據", style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.settings_measurement_card_title), style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
                 value = height,
                 onValueChange = onHeightChange,
-                label = { Text("身高 (cm)") },
+                label = { Text(stringResource(R.string.settings_label_height)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -304,7 +304,7 @@ private fun MeasurementInputCard(
             OutlinedTextField(
                 value = weight,
                 onValueChange = onWeightChange,
-                label = { Text("體重 (kg)") },
+                label = { Text(stringResource(R.string.settings_label_weight)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -313,7 +313,7 @@ private fun MeasurementInputCard(
             OutlinedTextField(
                 value = bodyFat,
                 onValueChange = onBodyFatChange,
-                label = { Text("體脂肪率 (%)") },
+                label = { Text(stringResource(R.string.settings_label_body_fat)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -323,7 +323,7 @@ private fun MeasurementInputCard(
                 onClick = onSave,
                 modifier = Modifier.align(Alignment.End)
             ) {
-                Text("儲存")
+                Text(stringResource(R.string.common_save))
             }
         }
     }
@@ -363,7 +363,7 @@ private fun MeasurementItem(
             IconButton(onClick = { onDelete(measurementUiState.id) }) {
                 Icon(
                     painterResource(R.drawable.delete_24px),
-                    contentDescription = "刪除紀錄",
+                    contentDescription = stringResource(R.string.settings_delete_record_cd),
                     tint = MaterialTheme.colorScheme.error
                 )
             }

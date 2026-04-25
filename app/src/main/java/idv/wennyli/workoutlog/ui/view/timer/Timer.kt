@@ -25,10 +25,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import kotlinx.coroutines.delay
 
@@ -96,11 +98,11 @@ private fun TimerScreen(
     if (isShowSaveConfirmation) {
         AlertDialog(
             onDismissRequest = onSaveConfirmationDismissRequest,
-            title = { Text("儲存成功") },
-            text = { Text("訓練紀錄已成功新增至您的日誌。") },
+            title = { Text(stringResource(R.string.timer_save_success_title)) },
+            text = { Text(stringResource(R.string.timer_save_success_message)) },
             confirmButton = {
                 Button(onClick = onSaveConfirmationDismissRequest) {
-                    Text("確定")
+                    Text(stringResource(R.string.common_confirm))
                 }
             }
         )
@@ -157,7 +159,7 @@ private fun TimerSetup(
         OutlinedTextField(
             value = exerciseName,
             onValueChange = onExerciseNameChange,
-            label = { Text("運動名稱") },
+            label = { Text(stringResource(R.string.timer_label_exercise_name)) },
             modifier = Modifier.fillMaxWidth(),
             enabled = isEnabled
         )
@@ -166,7 +168,7 @@ private fun TimerSetup(
             OutlinedTextField(
                 value = totalSets.toString(),
                 onValueChange = { onTotalSetsChange(it.toIntOrNull() ?: 1) },
-                label = { Text("總組數") },
+                label = { Text(stringResource(R.string.timer_label_total_sets)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 enabled = isEnabled
@@ -175,7 +177,7 @@ private fun TimerSetup(
             OutlinedTextField(
                 value = restTime.toString(),
                 onValueChange = { onRestTimeChange(it.toIntOrNull() ?: 0) },
-                label = { Text("休息時間(秒)") },
+                label = { Text(stringResource(R.string.timer_label_rest_time)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 modifier = Modifier.weight(1f),
                 enabled = isEnabled
@@ -194,20 +196,20 @@ private fun TimerDisplay(
 ) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
-            text = exerciseName.ifBlank { "未設定動作" },
+            text = exerciseName.ifBlank { stringResource(R.string.timer_no_exercise) },
             style = MaterialTheme.typography.headlineSmall
         )
         Text(
-            text = "目前組數: $currentSet / $totalSets",
+            text = stringResource(R.string.timer_current_set, currentSet, totalSets),
             style = MaterialTheme.typography.titleLarge
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
             text = when (timerState) {
-                TimerState.IDLE -> "準備開始"
-                TimerState.WORKING -> "進行中 (第 $currentSet 組)"
-                TimerState.RESTING -> "休息中: ${formatTime(timeLeft)}"
-                TimerState.FINISHED -> "訓練完成！"
+                TimerState.IDLE -> stringResource(R.string.timer_state_idle)
+                TimerState.WORKING -> stringResource(R.string.timer_state_working, currentSet)
+                TimerState.RESTING -> stringResource(R.string.timer_state_resting, formatTime(timeLeft))
+                TimerState.FINISHED -> stringResource(R.string.timer_state_finished)
             }
         )
     }
@@ -232,7 +234,7 @@ private fun TimerControls(
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
-                Text("儲存紀錄至日誌")
+                Text(stringResource(R.string.timer_button_save))
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -246,13 +248,13 @@ private fun TimerControls(
                         timerState == TimerState.WORKING ||
                         timerState == TimerState.FINISHED
             ) {
-                Text("開始一組")
+                Text(stringResource(R.string.timer_button_start_set))
             }
             Button(
                 onClick = onStartRest,
                 enabled = timerState == TimerState.WORKING
             ) {
-                Text("開始休息")
+                Text(stringResource(R.string.timer_button_start_rest))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
@@ -264,12 +266,12 @@ private fun TimerControls(
                 onClick = onSkipRest,
                 enabled = timerState == TimerState.RESTING
             ) {
-                Text("跳過休息")
+                Text(stringResource(R.string.timer_button_skip_rest))
             }
             Button(
                 onClick = onReset
             ) {
-                Text("重設")
+                Text(stringResource(R.string.timer_button_reset))
             }
         }
     }

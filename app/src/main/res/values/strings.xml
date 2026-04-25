@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">健身紀錄</string>
 
+    <!-- Login Screen -->
     <string name="login_welcome">歡迎回來</string>
     <string name="login_email">電子郵件</string>
     <string name="login_password">密碼</string>
@@ -13,10 +14,68 @@
     <string name="mian_screen_settings">設定</string>
     <string name="main_screen_logout">登出</string>
 
+    <!-- Common -->
+    <string name="common_error_title">錯誤</string>
+    <string name="common_confirm">確定</string>
+    <string name="common_save">儲存</string>
+    <string name="common_back_cd">返回</string>
+
+    <!-- WorkoutLog Screen -->
+    <string name="workout_log_add_workout_cd">新增訓練</string>
+    <string name="workout_log_select_date_cd">選擇日期</string>
+    <string name="workout_log_current_date">目前日期: %s</string>
+    <string name="workout_log_empty">此日期沒有訓練記錄。</string>
+    <string name="workout_log_item_stats">重量: %1$skg, 組數: %2$d, 次數/時間: %3$d %4$s</string>
+    <string name="workout_log_item_feel">感覺: %1$d/5, 控制: %2$d/5</string>
+    <string name="workout_log_item_notes">備註: %s</string>
+    <string name="workout_log_delete_cd">刪除訓練</string>
+
+    <!-- AddWorkout Screen -->
+    <string name="add_workout_title">新增訓練記錄</string>
+    <string name="add_workout_title_edit">編輯訓練紀錄</string>
+    <string name="add_workout_button_add">新增</string>
+    <string name="add_workout_label_date">日期 (YYYY-MM-DD)</string>
+    <string name="add_workout_label_muscle_group">訓練部位</string>
+    <string name="add_workout_label_weight">重量 (kg)</string>
+    <string name="add_workout_label_sets">組數</string>
+    <string name="add_workout_label_reps">次數/時間</string>
+    <string name="add_workout_label_muscle_feel">肌肉感覺</string>
+    <string name="add_workout_label_control">控制情況</string>
+    <string name="add_workout_label_notes">備註</string>
+    <string name="add_workout_label_exercise">訓練動作</string>
+
+    <!-- Timer Screen -->
+    <string name="timer_save_success_title">儲存成功</string>
+    <string name="timer_save_success_message">訓練紀錄已成功新增至您的日誌。</string>
+    <string name="timer_label_exercise_name">運動名稱</string>
+    <string name="timer_label_total_sets">總組數</string>
+    <string name="timer_label_rest_time">休息時間(秒)</string>
+    <string name="timer_no_exercise">未設定動作</string>
+    <string name="timer_current_set">目前組數: %1$d / %2$d</string>
+    <string name="timer_state_idle">準備開始</string>
+    <string name="timer_state_working">進行中 (第 %d 組)</string>
+    <string name="timer_state_resting">休息中: %s</string>
+    <string name="timer_state_finished">訓練完成！</string>
+    <string name="timer_button_save">儲存紀錄至日誌</string>
+    <string name="timer_button_start_set">開始一組</string>
+    <string name="timer_button_start_rest">開始休息</string>
+    <string name="timer_button_skip_rest">跳過休息</string>
+    <string name="timer_button_reset">重設</string>
+
+    <!-- Settings Screen -->
     <string name="settings_profile_title">個人資料</string>
     <string name="settings_gender_title">生理性別</string>
     <string name="settings_birthdate_title">出生年月日</string>
     <string name="settings_gender_male">男性</string>
     <string name="settings_gender_female">女性</string>
     <string name="settings_gender_other">不指定</string>
+    <string name="settings_history_title">歷史記錄</string>
+    <string name="settings_empty_history">尚未有任何記錄。</string>
+    <string name="settings_select_date_cd">選擇日期</string>
+    <string name="settings_select_date_placeholder">請選擇日期</string>
+    <string name="settings_measurement_card_title">記錄目前身體數據</string>
+    <string name="settings_label_height">身高 (cm)</string>
+    <string name="settings_label_weight">體重 (kg)</string>
+    <string name="settings_label_body_fat">體脂肪率 (%)</string>
+    <string name="settings_delete_record_cd">刪除紀錄</string>
 </resources>

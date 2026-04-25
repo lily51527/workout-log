@@ -114,8 +114,8 @@ fun AddWorkoutScreen(
     var control by remember { mutableIntStateOf(initialWorkout?.control ?: 3) }
     var notes by remember { mutableStateOf(initialWorkout?.notes ?: "") }
 
-    val topBarTitle = if (isEditMode) "編輯訓練紀錄" else "新增訓練記錄"
-    val buttonText = if (isEditMode) "儲存" else "新增"
+    val topBarTitle = if (isEditMode) stringResource(R.string.add_workout_title_edit) else stringResource(R.string.add_workout_title)
+    val buttonText = if (isEditMode) stringResource(R.string.common_save) else stringResource(R.string.add_workout_button_add)
 
     var exerciseInputExpanded by remember { mutableStateOf(false) }
     var repsUnitExpanded by remember { mutableStateOf(false) }
@@ -237,7 +237,7 @@ private fun AddWorkoutContent(
         OutlinedTextField(
             value = date,
             onValueChange = onDateChange,
-            label = { Text("日期 (YYYY-MM-DD)") },
+            label = { Text(stringResource(R.string.add_workout_label_date)) },
         )
         ExerciseInput(
             exercise = exercise,
@@ -249,18 +249,18 @@ private fun AddWorkoutContent(
         OutlinedTextField(
             value = muscleGroup,
             onValueChange = onMuscleGroupChange,
-            label = { Text("訓練部位") }
+            label = { Text(stringResource(R.string.add_workout_label_muscle_group)) }
         )
         OutlinedTextField(
             value = weight,
             onValueChange = onWeightChange,
-            label = { Text("重量 (kg)") },
+            label = { Text(stringResource(R.string.add_workout_label_weight)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         OutlinedTextField(
             value = sets,
             onValueChange = onSetsChange,
-            label = { Text("組數") },
+            label = { Text(stringResource(R.string.add_workout_label_sets)) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
         Row(
@@ -269,7 +269,7 @@ private fun AddWorkoutContent(
             OutlinedTextField(
                 value = reps,
                 onValueChange = onRepsChange,
-                label = { Text("次數/時間") },
+                label = { Text(stringResource(R.string.add_workout_label_reps)) },
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
@@ -282,19 +282,19 @@ private fun AddWorkoutContent(
             )
         }
         RatingInput(
-            label = "肌肉感覺",
+            label = stringResource(R.string.add_workout_label_muscle_feel),
             rating = muscleFeel,
             onRatingChange = onMuscleFeelChange
         )
         RatingInput(
-            label = "控制情況",
+            label = stringResource(R.string.add_workout_label_control),
             rating = control,
             onRatingChange = onControlChange
         )
         OutlinedTextField(
             value = notes,
             onValueChange = onNotesChange,
-            label = { Text("備註") }
+            label = { Text(stringResource(R.string.add_workout_label_notes)) }
         )
     }
 }
@@ -315,7 +315,7 @@ private fun ExerciseInput(
         OutlinedTextField(
             value = exercise,
             onValueChange = onExerciseChange,
-            label = { Text("訓練動作") },
+            label = { Text(stringResource(R.string.add_workout_label_exercise)) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
             modifier = Modifier
                 .fillMaxWidth()
@@ -423,7 +423,7 @@ fun AddWorkoutTopAppBar(
             IconButton(onClick = onNavigateUp) {
                 Icon(
                     painter = painterResource(R.drawable.arrow_back_24px),
-                    contentDescription = "返回"
+                    contentDescription = stringResource(R.string.common_back_cd)
                 )
             }
         }

@@ -2,12 +2,12 @@ package idv.wennyli.workoutlog.data.repository
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
-import idv.wennyli.workoutlog.data.model.BodyMeasurement
-import idv.wennyli.workoutlog.data.model.UserProfile
 import idv.wennyli.workoutlog.data.model.Workout
+import idv.wennyli.workoutlog.utils.FirestorePaths
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -36,13 +36,17 @@ class WorkoutRepositoryImpl @Inject constructor(
     private val userId: String?
         get() = auth.currentUser?.uid
 
+    // 集中管理集合參照，避免路徑字串重複出現
+    private val workoutsCollection: CollectionReference?
+        get() = userId?.let { firestore.collection(FirestorePaths.workouts(appId, it)) }
+
     override fun getWorkouts(): Flow<List<Workout>> = callbackFlow {
-        val collectionPath = userId?.let { "artifacts/$appId/users/$it/workouts" } ?: run {
+        val collection = workoutsCollection ?: run {
             trySend(emptyList())
             awaitClose()
             return@callbackFlow
         }
-        val listener = firestore.collection(collectionPath)
+        val listener = collection
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -63,26 +67,19 @@ class WorkoutRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addWorkout(workout: Workout) {
-        userId?.let {
-            val collectionPath = "artifacts/$appId/users/$it/workouts"
-            val newWorkoutRef = firestore.collection(collectionPath).document()
-            val finalMeasurement = workout.copy(id = newWorkoutRef.id, userId = it)
-            newWorkoutRef.set(finalMeasurement).await()
-        }
+        val uid = userId ?: return
+        val collection = workoutsCollection ?: return
+        val newRef = collection.document()
+        newRef.set(workout.copy(id = newRef.id, userId = uid)).await()
     }
 
     override suspend fun updateWorkout(workout: Workout) {
-        userId?.let {
-            val collectionPath = "artifacts/$appId/users/$it/workouts"
-            val newWorkoutRef = firestore.collection(collectionPath).document(workout.id)
-            newWorkoutRef.set(workout).await()
-        }
+        val collection = workoutsCollection ?: return
+        collection.document(workout.id).set(workout).await()
     }
 
     override suspend fun deleteWorkout(workoutId: String) {
-        userId?.let {
-            val collectionPath = "artifacts/$appId/users/$it/workouts"
-            firestore.collection(collectionPath).document(workoutId).delete().await()
-        }
+        val collection = workoutsCollection ?: return
+        collection.document(workoutId).delete().await()
     }
 }

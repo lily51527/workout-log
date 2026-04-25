@@ -2,10 +2,12 @@ package idv.wennyli.workoutlog.data.repository
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.Query
 import idv.wennyli.workoutlog.data.model.BodyMeasurement
+import idv.wennyli.workoutlog.utils.FirestorePaths
 import jakarta.inject.Inject
 import jakarta.inject.Named
 import kotlinx.coroutines.channels.awaitClose
@@ -31,13 +33,17 @@ class BodyMeasurementRepositoryImpl @Inject constructor(
     private val userId: String?
         get() = auth.currentUser?.uid
 
+    // 集中管理集合參照，避免路徑字串重複出現
+    private val measurementsCollection: CollectionReference?
+        get() = userId?.let { firestore.collection(FirestorePaths.measurements(appId, it)) }
+
     override fun getBodyMeasurements(): Flow<List<BodyMeasurement>> = callbackFlow {
-        val collectionPath = userId?.let { "artifacts/$appId/users/$it/measurements" } ?: run {
+        val collection = measurementsCollection ?: run {
             trySend(emptyList())
             awaitClose()
             return@callbackFlow
         }
-        val listener = firestore.collection(collectionPath)
+        val listener = collection
             .orderBy("timestamp", Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
                 if (error != null) {
@@ -58,21 +64,14 @@ class BodyMeasurementRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addBodyMeasurement(measurement: BodyMeasurement) {
-        userId?.let {
-            val collectionPath = "artifacts/$appId/users/$it/measurements"
-            // 1. 建立一個帶有自動產生 ID 的新文件參照
-            val newMeasurementRef = firestore.collection(collectionPath).document()
-            // 2. 將自動產生的 ID 和 userId 複製到您的物件中
-            val finalMeasurement = measurement.copy(id = newMeasurementRef.id, userId = it)
-            // 3. 使用 set 方法將帶有 ID 的物件寫入該文件
-            newMeasurementRef.set(finalMeasurement).await()
-        }
+        val uid = userId ?: return
+        val collection = measurementsCollection ?: return
+        val newRef = collection.document()
+        newRef.set(measurement.copy(id = newRef.id, userId = uid)).await()
     }
 
     override suspend fun deleteBodyMeasurement(measurementId: String) {
-        userId?.let {
-            val collectionPath = "artifacts/$appId/users/$it/measurements"
-            firestore.collection(collectionPath).document(measurementId).delete().await()
-        }
+        val collection = measurementsCollection ?: return
+        collection.document(measurementId).delete().await()
     }
 }

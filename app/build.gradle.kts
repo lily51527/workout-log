@@ -9,12 +9,12 @@ plugins {
 
 android {
     namespace = "idv.wennyli.workoutlog"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "idv.wennyli.workoutlog"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0"
 

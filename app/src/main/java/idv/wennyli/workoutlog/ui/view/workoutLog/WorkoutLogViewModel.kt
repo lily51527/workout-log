@@ -17,8 +17,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class WorkoutLogViewModel @Inject constructor(
-    private val workoutRepository: WorkoutRepository,
-    private val exerciseRepository: ExerciseRepository,
+    private val workoutRepository: WorkoutRepository
 ) : ViewModel() {
 
     private val _workouts = MutableStateFlow<List<Workout>>(emptyList())

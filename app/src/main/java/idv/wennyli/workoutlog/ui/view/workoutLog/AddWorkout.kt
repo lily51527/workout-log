@@ -46,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.R
+import idv.wennyli.workoutlog.data.model.RepsUnit
 import idv.wennyli.workoutlog.data.model.Workout
 import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import java.text.SimpleDateFormat
@@ -108,7 +109,7 @@ fun AddWorkoutScreen(
     var reps by remember {
         mutableStateOf(initialWorkout?.reps?.let { if (it == 0) "" else it.toString() } ?: "")
     }
-    var repsUnit by remember { mutableStateOf(initialWorkout?.repsUnit ?: "次數") }
+    var repsUnit by remember { mutableStateOf(RepsUnit.fromDisplayName(initialWorkout?.repsUnit)) }
     var muscleFeel by remember { mutableIntStateOf(initialWorkout?.muscleFeel ?: 3) }
     var control by remember { mutableIntStateOf(initialWorkout?.control ?: 3) }
     var notes by remember { mutableStateOf(initialWorkout?.notes ?: "") }
@@ -191,7 +192,7 @@ fun AddWorkoutScreen(
                     weight = weight.toDoubleOrNull() ?: 0.0,
                     sets = sets.toIntOrNull() ?: 0,
                     reps = reps.toIntOrNull() ?: 0,
-                    repsUnit = repsUnit,
+                    repsUnit = repsUnit.displayName,
                     muscleFeel = muscleFeel,
                     control = control,
                     notes = notes
@@ -210,7 +211,7 @@ private fun AddWorkoutContent(
     weight: String,
     sets: String,
     reps: String,
-    repsUnit: String,
+    repsUnit: RepsUnit,
     muscleFeel: Int,
     control: Int,
     notes: String,
@@ -228,7 +229,7 @@ private fun AddWorkoutContent(
     onMuscleFeelChange: (Int) -> Unit,
     onControlChange: (Int) -> Unit,
     onNotesChange: (String) -> Unit,
-    onUnitSelected: (String) -> Unit,
+    onUnitSelected: (RepsUnit) -> Unit,
 ) {
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -341,36 +342,31 @@ private fun ExerciseInput(
 
 @Composable
 private fun RepsUnitDropDown(
-    selectedUnit: String,
+    selectedUnit: RepsUnit,
     expanded: Boolean,
-    onUnitSelected: (String) -> Unit,
+    onUnitSelected: (RepsUnit) -> Unit,
     onExpandedChange: (Boolean) -> Unit
 ) {
     Box {
         OutlinedButton(
             onClick = { onExpandedChange(true) }
         ) {
-            Text(selectedUnit)
+            Text(selectedUnit.displayName)
             Icon(
                 painter = painterResource(R.drawable.arrow_drop_down_24px),
                 contentDescription = null
             )
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { onExpandedChange(false) }) {
-            DropdownMenuItem(
-                text = { Text("次數") },
-                onClick = {
-                    onUnitSelected("次數")
-                    onExpandedChange(false)
-                }
-            )
-            DropdownMenuItem(
-                text = { Text("秒數") },
-                onClick = {
-                    onUnitSelected("秒數")
-                    onExpandedChange(false)
-                }
-            )
+            RepsUnit.entries.forEach { unit ->
+                DropdownMenuItem(
+                    text = { Text(unit.displayName) },
+                    onClick = {
+                        onUnitSelected(unit)
+                        onExpandedChange(false)
+                    }
+                )
+            }
         }
     }
 }
@@ -461,7 +457,7 @@ private fun ExerciseInputPreview() {
 private fun RepsUnitDropDownPreview() {
     WorkoutLogTheme {
         RepsUnitDropDown(
-            selectedUnit = "次數",
+            selectedUnit = RepsUnit.COUNT,
             expanded = false,
             onUnitSelected = {},
             onExpandedChange = {}
@@ -491,7 +487,7 @@ private fun AddWorkoutContentPreview() {
             muscleGroup = "三角肌 (前束)",
             sets = "3",
             reps = "8",
-            repsUnit = "次",
+            repsUnit = RepsUnit.COUNT,
             weight = "10.0",
             exerciseInputExpanded = false,
             repsUnitExpanded = false,

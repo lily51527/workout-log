@@ -3,6 +3,7 @@ package idv.wennyli.workoutlog.ui.view.timer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import idv.wennyli.workoutlog.data.model.RepsUnit
 import idv.wennyli.workoutlog.data.model.Workout
 import idv.wennyli.workoutlog.data.repository.ExerciseRepository
 import idv.wennyli.workoutlog.data.repository.WorkoutRepository
@@ -112,7 +113,7 @@ class TimerViewModel @Inject constructor(
                 muscleGroup = exerciseRepository.getExerciseToMuscleMap()[_exerciseName.value] ?: "",
                 sets = _currentSet.value,
                 reps = 8,
-                repsUnit = "次數",
+                repsUnit = RepsUnit.COUNT.displayName,
                 weight = 0.0,
                 muscleFeel = 3,
                 control = 3,

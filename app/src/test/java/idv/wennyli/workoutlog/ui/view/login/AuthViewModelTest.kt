@@ -1,4 +1,4 @@
-package idv.wennyli.workoutlog
+package idv.wennyli.workoutlog.ui.view.login
 
 import androidx.compose.runtime.ExperimentalComposeApi
 import com.google.android.gms.tasks.Tasks

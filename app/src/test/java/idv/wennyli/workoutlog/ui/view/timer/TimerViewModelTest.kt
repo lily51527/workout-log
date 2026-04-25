@@ -1,4 +1,4 @@
-package idv.wennyli.workoutlog
+package idv.wennyli.workoutlog.ui.view.timer
 
 import com.google.common.truth.Truth.assertThat
 import idv.wennyli.workoutlog.data.repository.ExerciseRepository

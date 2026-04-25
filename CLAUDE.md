@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 工作目錄規則
+
+所有程式碼修改必須直接在專案主目錄（`/Users/wenyi_li/AndroidStudioProjects/WorkoutLog`）進行，不可只修改 worktree（`.claude/worktrees/` 下的目錄）。若目前環境是在 worktree 內，請改以主目錄的絕對路徑操作檔案。
+
 ## Build & Test Commands
 
 ```bash

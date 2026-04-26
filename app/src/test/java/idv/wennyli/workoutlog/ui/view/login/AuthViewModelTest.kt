@@ -8,6 +8,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import idv.wennyli.workoutlog.ui.view.login.AuthState
 import idv.wennyli.workoutlog.ui.view.login.AuthViewModel
+import idv.wennyli.workoutlog.utils.AppResource
 import idv.wennyli.workoutlog.utils.MainDispatcherRule
 import io.mockk.every
 import io.mockk.mockk
@@ -24,6 +25,7 @@ class AuthViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var mockAuth: FirebaseAuth
+    private lateinit var mockAppResource: AppResource
     private lateinit var viewModel: AuthViewModel
 
     // 用來 Mock 成功的結果 (因為 Firebase API 回傳的是 Task<AuthResult>)
@@ -32,8 +34,9 @@ class AuthViewModelTest {
     @Before
     fun setup() {
         mockAuth = mockk()
+        mockAppResource = mockk()
         mockAuthAuthResult = mockk()
-        viewModel = AuthViewModel(mockAuth)
+        viewModel = AuthViewModel(mockAuth, mockAppResource)
     }
 
     // ==========================================

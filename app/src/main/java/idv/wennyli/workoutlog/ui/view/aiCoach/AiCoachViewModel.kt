@@ -33,7 +33,15 @@ class AiCoachViewModel @Inject constructor(
                 val feedback = aiCoachRepository.getFeedback()
                 _uiState.value = AiCoachUiState.Success(feedback)
             } catch (e: Exception) {
-                _uiState.value = AiCoachUiState.Error(e.message ?: "未知錯誤")
+                val message = when {
+                    e.message?.contains("RESOURCE_EXHAUSTED") == true -> "AI 服務今日使用量已達上限，請明天再試"
+                    e.message?.contains("UNAUTHENTICATED") == true -> "請先登入才能使用 AI 教練"
+                    e.message?.contains("UNAVAILABLE") == true -> "無法連線至伺服器，請檢查網路後重試"
+                    e.message?.contains("DEADLINE_EXCEEDED") == true -> "請求逾時，請稍後再試"
+                    e.message?.contains("INTERNAL") == true -> "伺服器發生錯誤，請稍後再試"
+                    else -> "無法取得 AI 回饋，請稍後再試"
+                }
+                _uiState.value = AiCoachUiState.Error(message)
             }
         }
     }

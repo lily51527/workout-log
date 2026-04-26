@@ -26,11 +26,11 @@ class AiCoachViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<AiCoachUiState>(AiCoachUiState.Idle)
     val uiState: StateFlow<AiCoachUiState> = _uiState.asStateFlow()
 
-    fun getFeedback(question: String? = null) {
+    fun getFeedback() {
         viewModelScope.launch {
             _uiState.value = AiCoachUiState.Loading
             try {
-                val feedback = aiCoachRepository.getFeedback(question)
+                val feedback = aiCoachRepository.getFeedback()
                 _uiState.value = AiCoachUiState.Success(feedback)
             } catch (e: Exception) {
                 _uiState.value = AiCoachUiState.Error(e.message ?: "未知錯誤")

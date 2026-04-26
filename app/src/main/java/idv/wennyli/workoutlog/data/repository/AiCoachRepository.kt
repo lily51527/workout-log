@@ -8,7 +8,7 @@ import javax.inject.Inject
 import javax.inject.Named
 
 interface AiCoachRepository {
-    suspend fun getFeedback(question: String? = null): AiCoachFeedback
+    suspend fun getFeedback(): AiCoachFeedback
 }
 
 class AiCoachRepositoryImpl @Inject constructor(
@@ -16,9 +16,8 @@ class AiCoachRepositoryImpl @Inject constructor(
     @Named("appId") private val appId: String
 ) : AiCoachRepository {
 
-    override suspend fun getFeedback(question: String?): AiCoachFeedback {
-        val data = mutableMapOf<String, Any>("appId" to appId)
-        if (question != null) data["question"] = question
+    override suspend fun getFeedback(): AiCoachFeedback {
+        val data = mapOf("appId" to appId)
 
         val result = functions
             .getHttpsCallable("getAiCoachFeedback")

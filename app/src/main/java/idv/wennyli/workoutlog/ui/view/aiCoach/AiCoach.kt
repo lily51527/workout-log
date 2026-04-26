@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.data.model.AiCoachFeedback
 import idv.wennyli.workoutlog.data.model.RecommendedExercise
+import idv.wennyli.workoutlog.utils.toRelativeTimeString
 
 @Composable
 fun AiCoach(
@@ -98,6 +99,12 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
     ) {
         item {
             Text("AI 健身教練", style = MaterialTheme.typography.headlineMedium)
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                "最後更新：${feedback.generatedAt.toRelativeTimeString()}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Spacer(modifier = Modifier.height(4.dp))
         }
 

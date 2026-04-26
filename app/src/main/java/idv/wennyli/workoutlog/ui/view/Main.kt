@@ -87,7 +87,8 @@ fun MainScreen(
     val items = listOf(
         BottomNavItem.Log,
         BottomNavItem.Timer,
-        BottomNavItem.Settings
+        BottomNavItem.Settings,
+        BottomNavItem.AiCoach
     )
 
     val showMainBar = items.any { it.route == currentRoute }

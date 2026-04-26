@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import idv.wennyli.workoutlog.R
+import idv.wennyli.workoutlog.ui.view.aiCoach.AiCoach
 import idv.wennyli.workoutlog.ui.view.settings.Settings
 import idv.wennyli.workoutlog.ui.view.timer.Timer
 import idv.wennyli.workoutlog.ui.view.workoutLog.AddWorkoutRoute
@@ -35,6 +36,12 @@ sealed class BottomNavItem(val route: String, val iconId: Int, val labelId: Int)
             R.drawable.outline_settings_24,
             R.string.mian_screen_settings
         )
+
+    object AiCoach : BottomNavItem(
+        "ai_coach_screen",
+        R.drawable.outline_psychology_24,
+        R.string.main_screen_ai_coach
+    )
 }
 
 // 新增：將新增/編輯畫面的路由與參數萃取為靜態常數與輔助函式
@@ -107,6 +114,9 @@ fun BottomNavGraph(
         }
         composable(BottomNavItem.Settings.route) {
             Settings()
+        }
+        composable(BottomNavItem.AiCoach.route) {
+            AiCoach()
         }
     }
 }

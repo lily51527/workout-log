@@ -5,10 +5,13 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.firestore
+import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import idv.wennyli.workoutlog.data.repository.AiCoachRepository
+import idv.wennyli.workoutlog.data.repository.AiCoachRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepository
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.ExerciseRepository
@@ -59,4 +62,15 @@ object AppModule {
     @Provides
     @Singleton
     fun provideExerciseRepository(): ExerciseRepository = ExerciseRepositoryImpl()
+
+    @Provides
+    @Singleton
+    fun provideFirebaseFunctions(): FirebaseFunctions = FirebaseFunctions.getInstance()
+
+    @Provides
+    @Singleton
+    fun provideAiCoachRepository(
+        functions: FirebaseFunctions,
+        @Named("appId") appId: String
+    ): AiCoachRepository = AiCoachRepositoryImpl(functions, appId)
 }

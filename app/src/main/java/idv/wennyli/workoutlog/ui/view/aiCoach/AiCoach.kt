@@ -22,8 +22,10 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.AiCoachFeedback
 import idv.wennyli.workoutlog.data.model.RecommendedExercise
 import idv.wennyli.workoutlog.utils.toRelativeTimeString
@@ -66,16 +68,16 @@ private fun IdleContent(onRequestFeedback: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("AI 健身教練", style = MaterialTheme.typography.headlineMedium)
+        Text(stringResource(R.string.ai_coach_title), style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            "點擊下方按鈕，讓 AI 分析你的訓練紀錄",
+            stringResource(R.string.ai_coach_idle_description),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onRequestFeedback) {
-            Text("取得 AI 回饋")
+            Text(stringResource(R.string.ai_coach_button_get_feedback))
         }
     }
 }
@@ -86,7 +88,7 @@ private fun LoadingContent() {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             CircularProgressIndicator()
             Spacer(modifier = Modifier.height(16.dp))
-            Text("AI 正在分析你的訓練資料...", style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.ai_coach_loading), style = MaterialTheme.typography.bodyMedium)
         }
     }
 }
@@ -98,10 +100,10 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         item {
-            Text("AI 健身教練", style = MaterialTheme.typography.headlineMedium)
+            Text(stringResource(R.string.ai_coach_title), style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                "最後更新：${feedback.generatedAt.toRelativeTimeString()}",
+                stringResource(R.string.ai_coach_last_updated, feedback.generatedAt.toRelativeTimeString()),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -109,14 +111,14 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
         }
 
         item {
-            FeedbackCard(title = "整體評估") {
+            FeedbackCard(title = stringResource(R.string.ai_coach_card_summary)) {
                 Text(feedback.summary, style = MaterialTheme.typography.bodyMedium)
             }
         }
 
         if (feedback.reasoning.isNotBlank()) {
             item {
-                FeedbackCard(title = "分析推理") {
+                FeedbackCard(title = stringResource(R.string.ai_coach_card_reasoning)) {
                     Text(feedback.reasoning, style = MaterialTheme.typography.bodyMedium)
                 }
             }
@@ -124,7 +126,7 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
 
         if (feedback.warnings.isNotEmpty()) {
             item {
-                FeedbackCard(title = "注意事項") {
+                FeedbackCard(title = stringResource(R.string.ai_coach_card_warnings)) {
                     feedback.warnings.forEach { warning ->
                         Text("• $warning", style = MaterialTheme.typography.bodyMedium)
                     }
@@ -134,7 +136,7 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
 
         if (feedback.recommendedExercises.isNotEmpty()) {
             item {
-                Text("建議動作", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.ai_coach_section_recommended), style = MaterialTheme.typography.titleMedium)
             }
             items(feedback.recommendedExercises) { exercise ->
                 ExerciseCard(exercise)
@@ -147,7 +149,7 @@ private fun FeedbackContent(feedback: AiCoachFeedback, onRequestFeedback: () -> 
                 onClick = onRequestFeedback,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("重新分析")
+                Text(stringResource(R.string.ai_coach_button_reanalyze))
             }
         }
     }
@@ -160,7 +162,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("發生錯誤", style = MaterialTheme.typography.titleLarge)
+        Text(stringResource(R.string.ai_coach_error_title), style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             message,
@@ -169,7 +171,7 @@ private fun ErrorContent(message: String, onRetry: () -> Unit) {
         )
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onRetry) {
-            Text("重試")
+            Text(stringResource(R.string.ai_coach_button_retry))
         }
     }
 }
@@ -197,7 +199,7 @@ private fun ExerciseCard(exercise: RecommendedExercise) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(exercise.exercise, style = MaterialTheme.typography.titleSmall)
             Text(
-                "肌群：${exercise.muscleGroup}",
+                stringResource(R.string.ai_coach_muscle_group, exercise.muscleGroup),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

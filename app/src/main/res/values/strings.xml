@@ -74,6 +74,21 @@
     <string name="error_auth_unknown">發生未知錯誤，請稍後再試。</string>
     <string name="error_auth_anonymous_failed">匿名登入失敗，請稍後再試。</string>
 
+    <!-- AI Coach Screen -->
+    <string name="ai_coach_title">AI 健身教練</string>
+    <string name="ai_coach_idle_description">點擊下方按鈕，讓 AI 分析你的訓練紀錄</string>
+    <string name="ai_coach_button_get_feedback">取得 AI 回饋</string>
+    <string name="ai_coach_loading">AI 正在分析你的訓練資料…</string>
+    <string name="ai_coach_last_updated">最後更新：%s</string>
+    <string name="ai_coach_card_summary">整體評估</string>
+    <string name="ai_coach_card_reasoning">分析推理</string>
+    <string name="ai_coach_card_warnings">注意事項</string>
+    <string name="ai_coach_section_recommended">建議動作</string>
+    <string name="ai_coach_button_reanalyze">重新分析</string>
+    <string name="ai_coach_error_title">發生錯誤</string>
+    <string name="ai_coach_button_retry">重試</string>
+    <string name="ai_coach_muscle_group">肌群：%s</string>
+
     <!-- AI Coach Errors -->
     <string name="error_ai_quota_exceeded">AI 服務今日使用量已達上限，請明天再試。</string>
     <string name="error_ai_unauthenticated">請先登入才能使用 AI 教練。</string>

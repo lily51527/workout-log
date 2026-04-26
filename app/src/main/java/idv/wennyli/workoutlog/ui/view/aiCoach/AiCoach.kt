@@ -23,11 +23,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.AiCoachFeedback
 import idv.wennyli.workoutlog.data.model.RecommendedExercise
+import idv.wennyli.workoutlog.ui.theme.WorkoutLogTheme
 import idv.wennyli.workoutlog.utils.toRelativeTimeString
 
 @Composable
@@ -187,6 +189,68 @@ private fun FeedbackCard(title: String, content: @Composable () -> Unit) {
             Spacer(modifier = Modifier.height(8.dp))
             content()
         }
+    }
+}
+
+@Preview(showBackground = true, name = "Idle State")
+@Composable
+private fun AiCoachIdlePreview() {
+    WorkoutLogTheme {
+        AiCoachScreen(
+            uiState = AiCoachUiState.Idle,
+            onRequestFeedback = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Loading State")
+@Composable
+private fun AiCoachLoadingPreview() {
+    WorkoutLogTheme {
+        AiCoachScreen(
+            uiState = AiCoachUiState.Loading,
+            onRequestFeedback = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Success State")
+@Composable
+private fun AiCoachSuccessPreview() {
+    val mockFeedback = AiCoachFeedback(
+        summary = "近期訓練頻率穩定，以胸肌與背部為主，整體訓練量適中，動作控制表現良好。",
+        reasoning = "過去 30 筆紀錄中，胸推類動作佔比最高，肌肉感覺平均 3.8/5，控制感 4.1/5，但下肢訓練紀錄偏少，建議補強。",
+        recommendedExercises = listOf(
+            RecommendedExercise(
+                exercise = "深蹲",
+                muscleGroup = "下肢",
+                intensitySuggestion = "建議以 4 組 8-10 下、中等重量為主，控制離心階段"
+            ),
+            RecommendedExercise(
+                exercise = "羅馬尼亞硬舉",
+                muscleGroup = "後腿鏈",
+                intensitySuggestion = "輕重量 3 組 12 下，專注肌肉伸展感"
+            )
+        ),
+        warnings = listOf("下肢訓練不足，長期可能造成肌力不平衡", "連續多天訓練同部位，注意休息是否充足"),
+        generatedAt = System.currentTimeMillis() - 30 * 60 * 1000
+    )
+    WorkoutLogTheme {
+        AiCoachScreen(
+            uiState = AiCoachUiState.Success(mockFeedback),
+            onRequestFeedback = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Error State")
+@Composable
+private fun AiCoachErrorPreview() {
+    WorkoutLogTheme {
+        AiCoachScreen(
+            uiState = AiCoachUiState.Error("AI 服務今日使用量已達上限，請明天再試。"),
+            onRequestFeedback = {}
+        )
     }
 }
 

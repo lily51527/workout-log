@@ -1,5 +1,6 @@
 package idv.wennyli.workoutlog.di
 
+import android.content.Context
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -9,6 +10,7 @@ import com.google.firebase.functions.FirebaseFunctions
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import idv.wennyli.workoutlog.data.repository.AiCoachRepository
 import idv.wennyli.workoutlog.data.repository.AiCoachRepositoryImpl
@@ -20,12 +22,19 @@ import idv.wennyli.workoutlog.data.repository.UserProfileRepository
 import idv.wennyli.workoutlog.data.repository.UserProfileRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.WorkoutRepository
 import idv.wennyli.workoutlog.data.repository.WorkoutRepositoryImpl
+import idv.wennyli.workoutlog.utils.AppResource
+import idv.wennyli.workoutlog.utils.ResourceProvider
 import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideResourceProvider(@ApplicationContext context: Context): AppResource =
+        ResourceProvider(context)
 
     @Provides
     @Singleton

@@ -63,6 +63,25 @@
     <string name="timer_button_skip_rest">跳過休息</string>
     <string name="timer_button_reset">重設</string>
 
+    <!-- Auth Errors -->
+    <string name="error_auth_invalid_email">電子郵件格式不正確。</string>
+    <string name="error_auth_wrong_password">密碼錯誤。</string>
+    <string name="error_auth_user_not_found">找不到此用戶。</string>
+    <string name="error_auth_user_disabled">此用戶已被停用。</string>
+    <string name="error_auth_email_already_in_use">此電子郵件已被註冊。</string>
+    <string name="error_auth_weak_password">密碼強度不足，請至少設定 6 個字元。</string>
+    <string name="error_auth_failed">驗證失敗，請稍後再試。</string>
+    <string name="error_auth_unknown">發生未知錯誤，請稍後再試。</string>
+    <string name="error_auth_anonymous_failed">匿名登入失敗，請稍後再試。</string>
+
+    <!-- AI Coach Errors -->
+    <string name="error_ai_quota_exceeded">AI 服務今日使用量已達上限，請明天再試。</string>
+    <string name="error_ai_unauthenticated">請先登入才能使用 AI 教練。</string>
+    <string name="error_ai_unavailable">無法連線至伺服器，請檢查網路後重試。</string>
+    <string name="error_ai_timeout">請求逾時，請稍後再試。</string>
+    <string name="error_ai_internal">伺服器發生錯誤，請稍後再試。</string>
+    <string name="error_ai_unknown">無法取得 AI 回饋，請稍後再試。</string>
+
     <!-- Settings Screen -->
     <string name="settings_profile_title">個人資料</string>
     <string name="settings_gender_title">生理性別</string>

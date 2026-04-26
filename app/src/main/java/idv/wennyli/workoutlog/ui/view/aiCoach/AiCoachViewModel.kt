@@ -3,8 +3,10 @@ package idv.wennyli.workoutlog.ui.view.aiCoach
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.data.model.AiCoachFeedback
 import idv.wennyli.workoutlog.data.repository.AiCoachRepository
+import idv.wennyli.workoutlog.utils.AppResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +22,8 @@ sealed class AiCoachUiState {
 
 @HiltViewModel
 class AiCoachViewModel @Inject constructor(
-    private val aiCoachRepository: AiCoachRepository
+    private val aiCoachRepository: AiCoachRepository,
+    private val appResource: AppResource
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<AiCoachUiState>(AiCoachUiState.Idle)
@@ -34,12 +37,18 @@ class AiCoachViewModel @Inject constructor(
                 _uiState.value = AiCoachUiState.Success(feedback)
             } catch (e: Exception) {
                 val message = when {
-                    e.message?.contains("RESOURCE_EXHAUSTED") == true -> "AI 服務今日使用量已達上限，請明天再試"
-                    e.message?.contains("UNAUTHENTICATED") == true -> "請先登入才能使用 AI 教練"
-                    e.message?.contains("UNAVAILABLE") == true -> "無法連線至伺服器，請檢查網路後重試"
-                    e.message?.contains("DEADLINE_EXCEEDED") == true -> "請求逾時，請稍後再試"
-                    e.message?.contains("INTERNAL") == true -> "伺服器發生錯誤，請稍後再試"
-                    else -> "無法取得 AI 回饋，請稍後再試"
+                    e.message?.contains("RESOURCE_EXHAUSTED") == true ->
+                        appResource.getString(R.string.error_ai_quota_exceeded)
+                    e.message?.contains("UNAUTHENTICATED") == true ->
+                        appResource.getString(R.string.error_ai_unauthenticated)
+                    e.message?.contains("UNAVAILABLE") == true ->
+                        appResource.getString(R.string.error_ai_unavailable)
+                    e.message?.contains("DEADLINE_EXCEEDED") == true ->
+                        appResource.getString(R.string.error_ai_timeout)
+                    e.message?.contains("INTERNAL") == true ->
+                        appResource.getString(R.string.error_ai_internal)
+                    else ->
+                        appResource.getString(R.string.error_ai_unknown)
                 }
                 _uiState.value = AiCoachUiState.Error(message)
             }

@@ -6,13 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import dagger.hilt.android.lifecycle.HiltViewModel
+import idv.wennyli.workoutlog.R
+import idv.wennyli.workoutlog.utils.AppResource
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-// 定義驗證狀態的密封類別
 sealed class AuthState {
     object Idle : AuthState()
     object Loading : AuthState()
@@ -24,13 +25,13 @@ private const val TAG = "AuthViewModel"
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val appResource: AppResource
 ) : ViewModel() {
 
     private val _authState = MutableStateFlow<AuthState>(AuthState.Idle)
     val authState: StateFlow<AuthState> = _authState
 
-    // TODO: 需要將 hardcode 文字轉到 strings.xml 中
     fun registerWithEmail(email: String, password: String) {
         viewModelScope.launch {
             _authState.value = AuthState.Loading
@@ -41,7 +42,7 @@ class AuthViewModel @Inject constructor(
                 Log.e(TAG, "Registration failed", e)
                 _authState.value = AuthState.Error(mapFirebaseError(e))
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("發生未知錯誤: ${e.message}")
+                _authState.value = AuthState.Error(appResource.getString(R.string.error_auth_unknown))
             }
         }
     }
@@ -56,7 +57,7 @@ class AuthViewModel @Inject constructor(
                 Log.e(TAG, "Sign in failed", e)
                 _authState.value = AuthState.Error(mapFirebaseError(e))
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("發生未知錯誤: ${e.message}")
+                _authState.value = AuthState.Error(appResource.getString(R.string.error_auth_unknown))
             }
         }
     }
@@ -68,21 +69,20 @@ class AuthViewModel @Inject constructor(
                 auth.signInAnonymously().await()
                 _authState.value = AuthState.Success
             } catch (e: Exception) {
-                _authState.value = AuthState.Error("匿名登入失敗: ${e.message}")
+                _authState.value = AuthState.Error(appResource.getString(R.string.error_auth_anonymous_failed))
             }
         }
     }
 
-    // TODO:這段來源待驗證
     private fun mapFirebaseError(e: FirebaseAuthException): String {
         return when (e.errorCode) {
-            "ERROR_INVALID_EMAIL" -> "電子郵件格式不正確。"
-            "ERROR_WRONG_PASSWORD" -> "密碼錯誤。"
-            "ERROR_USER_NOT_FOUND" -> "找不到此用戶。"
-            "ERROR_USER_DISABLED" -> "此用戶已被停用。"
-            "ERROR_EMAIL_ALREADY_IN_USE" -> "此電子郵件已被註冊。"
-            "ERROR_WEAK_PASSWORD" -> "密碼強度不足，請至少設定 6 個字元。"
-            else -> "驗證失敗: ${e.message}"
+            "ERROR_INVALID_EMAIL" -> appResource.getString(R.string.error_auth_invalid_email)
+            "ERROR_WRONG_PASSWORD" -> appResource.getString(R.string.error_auth_wrong_password)
+            "ERROR_USER_NOT_FOUND" -> appResource.getString(R.string.error_auth_user_not_found)
+            "ERROR_USER_DISABLED" -> appResource.getString(R.string.error_auth_user_disabled)
+            "ERROR_EMAIL_ALREADY_IN_USE" -> appResource.getString(R.string.error_auth_email_already_in_use)
+            "ERROR_WEAK_PASSWORD" -> appResource.getString(R.string.error_auth_weak_password)
+            else -> appResource.getString(R.string.error_auth_failed)
         }
     }
 }

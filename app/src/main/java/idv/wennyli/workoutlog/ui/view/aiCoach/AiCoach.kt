@@ -45,7 +45,7 @@ fun AiCoach(
 }
 
 @Composable
-private fun AiCoachScreen(
+internal fun AiCoachScreen(
     uiState: AiCoachUiState,
     onRequestFeedback: () -> Unit
 ) {

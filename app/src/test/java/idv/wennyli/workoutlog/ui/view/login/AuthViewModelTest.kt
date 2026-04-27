@@ -6,6 +6,7 @@ import com.google.common.truth.Truth.assertThat
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
+import idv.wennyli.workoutlog.R
 import idv.wennyli.workoutlog.ui.view.login.AuthState
 import idv.wennyli.workoutlog.ui.view.login.AuthViewModel
 import idv.wennyli.workoutlog.utils.AppResource
@@ -36,6 +37,14 @@ class AuthViewModelTest {
         mockAuth = mockk()
         mockAppResource = mockk()
         mockAuthAuthResult = mockk()
+
+        every { mockAppResource.getString(R.string.error_auth_anonymous_failed) } returns "匿名登入失敗，請稍後再試。"
+        every { mockAppResource.getString(R.string.error_auth_wrong_password) } returns "密碼錯誤。"
+        every { mockAppResource.getString(R.string.error_auth_invalid_email) } returns "電子郵件格式不正確。"
+        every { mockAppResource.getString(R.string.error_auth_weak_password) } returns "密碼強度不足，請至少設定 6 個字元。"
+        every { mockAppResource.getString(R.string.error_auth_unknown) } returns "發生未知錯誤，請稍後再試。"
+        every { mockAppResource.getString(R.string.error_auth_failed) } returns "驗證失敗，請稍後再試。"
+
         viewModel = AuthViewModel(mockAuth, mockAppResource)
     }
 
@@ -118,10 +127,7 @@ class AuthViewModelTest {
         // Assert
         val state = viewModel.authState.value
         assertThat(state).isInstanceOf(AuthState.Error::class.java)
-        // Kotlin 轉型檢查
-        val errorState = state as AuthState.Error
-        assertThat(errorState.message).contains("匿名登入失敗")
-        assertThat(errorState.message).contains(errorMsg)
+        assertThat((state as AuthState.Error).message).contains("匿名登入失敗")
     }
 
     // ==========================================

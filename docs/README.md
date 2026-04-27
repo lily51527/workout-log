@@ -38,7 +38,7 @@ Repository
     ↕
 Firebase（Firestore / Auth / Cloud Functions）
          ↕
-    Gemini API（透過 Cloud Functions 串接，API Key 由 Secret Manager 管理）
+Gemini API（透過 Cloud Functions 串接，API Key 由 Secret Manager 管理）
 ```
 
 ### 目錄結構

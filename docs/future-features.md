@@ -43,6 +43,41 @@
 
 ---
 
+## 跨平台計畫（KMP）
+
+### 目標
+
+將 WorkoutLog 擴展為 Android + iOS 雙平台 App，採用 **Kotlin Multiplatform（KMP）共享邏輯層、各平台原生 UI** 的架構。
+
+### 架構方向
+
+```
+共享（commonMain）          Android             iOS
+─────────────────────────────────────────────────────
+data/model/             Jetpack Compose     SwiftUI
+data/repository/        Hilt → Koin         原生 DI
+ViewModel 層            ────────────────────────────
+```
+
+- **共享層**：`data/model/`、`data/repository/`、ViewModel 邏輯
+- **Android UI**：維持 Jetpack Compose，不動
+- **iOS UI**：用 SwiftUI 重新撰寫，對應相同 ViewModel 狀態
+
+### 主要遷移工作
+
+| 項目 | 說明 |
+|------|------|
+| Hilt → Koin | Hilt 不支援 KMP，需改用 Koin 做依賴注入 |
+| Firebase SDK 替換 | 改用 `firebase-kotlin-sdk`（GitLive），支援 Auth / Firestore / Functions |
+| ViewModel 共享 | 移至 `commonMain`，邏輯幾乎不需改動 |
+| iOS UI 撰寫 | 用 SwiftUI 實作各頁面，消費同一套 ViewModel |
+
+### 不採用 Compose Multiplatform 的理由
+
+Compose Multiplatform 的 iOS 渲染目前尚未成熟，效能與平台整合風險較高，因此 UI 層各自用原生框架，確保最佳使用者體驗。
+
+---
+
 ## 最容易延伸的起點
 
 目前已串接 Gemini API，以下兩個功能只需新增 Cloud Function 並在 App 端加對應的 Repository 即可完成：

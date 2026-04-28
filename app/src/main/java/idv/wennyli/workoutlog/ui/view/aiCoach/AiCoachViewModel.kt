@@ -30,6 +30,7 @@ class AiCoachViewModel @Inject constructor(
     val uiState: StateFlow<AiCoachUiState> = _uiState.asStateFlow()
 
     fun getFeedback() {
+        if (_uiState.value is AiCoachUiState.Loading) return
         viewModelScope.launch {
             _uiState.value = AiCoachUiState.Loading
             try {

@@ -45,7 +45,7 @@ class AiCoachRepositoryImpl @Inject constructor(
             reasoning = map["reasoning"] as? String ?: "",
             recommendedExercises = exercises,
             warnings = warnings,
-            generatedAt = (map["generatedAt"] as? Long) ?: 0L
+            generatedAt = (map["generatedAt"] as? Number)?.toLong() ?: 0L
         )
     }
 }

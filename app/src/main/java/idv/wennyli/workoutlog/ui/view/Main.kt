@@ -179,18 +179,6 @@ fun MainTopAppBarPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun MainBottomNavigationBarPreview() {
-    WorkoutLogTheme {
-        MainBottomNavigationBar(
-            currentRoute = BottomNavItem.Timer.route,
-            items = listOf(BottomNavItem.Log, BottomNavItem.Timer, BottomNavItem.Settings),
-            onNavigate = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
 fun MainScreenPreview() {
     WorkoutLogTheme {
         MainScreen(

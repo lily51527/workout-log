@@ -1,9 +1,7 @@
 package idv.wennyli.workoutlog.data.repository
 
-import com.google.firebase.functions.FirebaseFunctions
 import idv.wennyli.workoutlog.data.model.AiCoachFeedback
 import idv.wennyli.workoutlog.data.model.RecommendedExercise
-import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Named
 
@@ -12,20 +10,12 @@ interface AiCoachRepository {
 }
 
 class AiCoachRepositoryImpl @Inject constructor(
-    private val functions: FirebaseFunctions,
+    private val dataSource: AiCoachDataSource,
     @Named("appId") private val appId: String
 ) : AiCoachRepository {
 
     override suspend fun getFeedback(): AiCoachFeedback {
-        val data = mapOf("appId" to appId)
-
-        val result = functions
-            .getHttpsCallable("getAiCoachFeedback")
-            .call(data)
-            .await()
-
-        @Suppress("UNCHECKED_CAST")
-        val map = result.data as Map<String, Any>
+        val map = dataSource.fetchFeedback(appId)
 
         @Suppress("UNCHECKED_CAST")
         val exercises = (map["recommendedExercises"] as? List<Map<String, Any>>)

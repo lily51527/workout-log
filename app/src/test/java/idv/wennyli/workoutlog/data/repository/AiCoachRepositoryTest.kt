@@ -1,13 +1,10 @@
 package idv.wennyli.workoutlog.data.repository
 
-import com.google.android.gms.tasks.Tasks
 import com.google.common.truth.Truth.assertThat
-import com.google.firebase.functions.FirebaseFunctions
-import com.google.firebase.functions.HttpsCallableReference
-import com.google.firebase.functions.HttpsCallableResult
-import io.mockk.every
+import idv.wennyli.workoutlog.data.model.AiCoachException
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -16,36 +13,23 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class AiCoachRepositoryTest {
 
-    private lateinit var mockFunctions: FirebaseFunctions
-    private lateinit var mockCallableReference: HttpsCallableReference
+    private lateinit var mockDataSource: AiCoachDataSource
     private lateinit var repository: AiCoachRepository
 
     private val fakeAppId = "fake-app-id"
 
-    // 初始化 mock 物件並建立 repository 實例，每個測試執行前重置狀態
     @Before
     fun setup() {
-        mockFunctions = mockk()
-        mockCallableReference = mockk()
-
-        every { mockFunctions.getHttpsCallable("getAiCoachFeedback") } returns mockCallableReference
-
+        mockDataSource = mockk()
         repository = AiCoachRepositoryImpl(
-            functions = mockFunctions,
+            dataSource = mockDataSource,
             appId = fakeAppId
         )
     }
 
-    // HttpsCallableResult 的 constructor 是 package-private，用反射建立真實實例
-    private fun createCallableResult(data: Map<String, Any>): HttpsCallableResult {
-        val constructor = HttpsCallableResult::class.java.getDeclaredConstructor(Any::class.java)
-        constructor.isAccessible = true
-        return constructor.newInstance(data)
-    }
-
     // --- 正常流程 ---
 
-    // 驗證 API 回傳完整資料時，所有欄位都能正確對應到 AiCoachFeedback，包含 exercises 與 warnings
+    // 驗證 DataSource 回傳完整資料時，所有欄位都能正確對應到 AiCoachFeedback，包含 exercises 與 warnings
     @Test
     fun `getFeedback should return correctly mapped AiCoachFeedback on success`() = runTest {
         val fakeTimestamp = 1700000000000L
@@ -62,11 +46,7 @@ class AiCoachRepositoryTest {
             ),
             "generatedAt" to fakeTimestamp
         )
-        every { mockCallableReference.call(any()) } returns Tasks.forResult(
-            createCallableResult(
-                fakeData
-            )
-        )
+        coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
         val result = repository.getFeedback()
 
@@ -82,7 +62,7 @@ class AiCoachRepositoryTest {
         }
     }
 
-    // 驗證多筆 recommendedExercises 的順序與 API 回傳一致，不會被重新排序
+    // 驗證多筆 recommendedExercises 的順序與 DataSource 回傳一致，不會被重新排序
     @Test
     fun `getFeedback should return multiple recommended exercises in order`() = runTest {
         val fakeData: Map<String, Any> = mapOf(
@@ -94,11 +74,7 @@ class AiCoachRepositoryTest {
                 mapOf("exercise" to "臥推", "muscleGroup" to "胸大肌", "intensitySuggestion" to "")
             )
         )
-        every { mockCallableReference.call(any()) } returns Tasks.forResult(
-            createCallableResult(
-                fakeData
-            )
-        )
+        coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
         val result = repository.getFeedback()
 
@@ -109,7 +85,7 @@ class AiCoachRepositoryTest {
 
     // --- 缺少選填欄位的邊界情況 ---
 
-    // 驗證 API 未回傳 recommendedExercises 和 warnings 時，結果為空 list 而非 null 或例外
+    // 驗證 DataSource 未回傳 recommendedExercises 和 warnings 時，結果為空 list 而非 null 或例外
     @Test
     fun `getFeedback should return empty lists when recommendedExercises and warnings are absent`() =
         runTest {
@@ -118,11 +94,7 @@ class AiCoachRepositoryTest {
                 "reasoning" to "",
                 "generatedAt" to 0L
             )
-            every { mockCallableReference.call(any()) } returns Tasks.forResult(
-                createCallableResult(
-                    fakeData
-                )
-            )
+            coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
             val result = repository.getFeedback()
 
@@ -140,11 +112,7 @@ class AiCoachRepositoryTest {
                 "generatedAt" to 0L,
                 "recommendedExercises" to listOf(mapOf<String, Any>())
             )
-            every { mockCallableReference.call(any()) } returns Tasks.forResult(
-                createCallableResult(
-                    fakeData
-                )
-            )
+            coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
             val result = repository.getFeedback()
 
@@ -163,43 +131,48 @@ class AiCoachRepositoryTest {
             "reasoning" to "",
             "generatedAt" to 0L
         )
-        every { mockCallableReference.call(any()) } returns Tasks.forResult(
-            createCallableResult(
-                fakeData
-            )
-        )
+        coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
         val result = repository.getFeedback()
 
         assertThat(result.summary).isEmpty()
     }
 
+    // 驗證 generatedAt 為 Double 型別時仍能正確轉換，不會回傳 0L
+    @Test
+    fun `getFeedback should correctly convert generatedAt when returned as Double`() = runTest {
+        val fakeData: Map<String, Any> = mapOf(
+            "summary" to "test",
+            "reasoning" to "",
+            "generatedAt" to 1700000000000.0
+        )
+        coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
+
+        val result = repository.getFeedback()
+
+        assertThat(result.generatedAt).isEqualTo(1700000000000L)
+    }
+
     // --- 呼叫參數驗證 ---
 
-    // 驗證呼叫 Cloud Functions 時使用正確的 function 名稱，且帶入正確的 appId 作為參數
+    // 驗證呼叫 DataSource 時帶入正確的 appId
     @Test
-    fun `getFeedback should call correct function name with appId`() = runTest {
+    fun `getFeedback should call dataSource with correct appId`() = runTest {
         val fakeData: Map<String, Any> =
             mapOf("summary" to "", "reasoning" to "", "generatedAt" to 0L)
-        every { mockCallableReference.call(any()) } returns Tasks.forResult(
-            createCallableResult(
-                fakeData
-            )
-        )
+        coEvery { mockDataSource.fetchFeedback(fakeAppId) } returns fakeData
 
         repository.getFeedback()
 
-        verify(exactly = 1) { mockFunctions.getHttpsCallable("getAiCoachFeedback") }
-        verify(exactly = 1) { mockCallableReference.call(mapOf("appId" to fakeAppId)) }
+        coVerify(exactly = 1) { mockDataSource.fetchFeedback(fakeAppId) }
     }
 
     // --- 例外傳遞 ---
 
-    // 驗證 Firebase Functions 回傳錯誤（如配額超限）時，例外會正確向上傳遞給 ViewModel 處理
+    // 驗證 DataSource 拋出 AiCoachException 時，例外會正確向上傳遞給 ViewModel 處理
     @Test
-    fun `getFeedback should propagate exception when Firebase Functions call fails`() = runTest {
-        val fakeException = Exception("RESOURCE_EXHAUSTED: quota exceeded")
-        every { mockCallableReference.call(any()) } returns Tasks.forException(fakeException)
+    fun `getFeedback should propagate AiCoachException when dataSource throws`() = runTest {
+        coEvery { mockDataSource.fetchFeedback(any()) } throws AiCoachException.QuotaExceeded
 
         var thrown: Exception? = null
         try {
@@ -208,15 +181,13 @@ class AiCoachRepositoryTest {
             thrown = e
         }
 
-        assertThat(thrown).isNotNull()
-        assertThat(thrown?.message).contains("RESOURCE_EXHAUSTED")
+        assertThat(thrown).isInstanceOf(AiCoachException.QuotaExceeded::class.java)
     }
 
-    // 驗證網路不可用時，例外會正確向上傳遞，由 AiCoachViewModel 的 catch 區塊對應至友善錯誤訊息
+    // 驗證網路不可用時，AiCoachException.Unavailable 正確向上傳遞
     @Test
-    fun `getFeedback should propagate exception when network is unavailable`() = runTest {
-        val fakeException = Exception("UNAVAILABLE: network error")
-        every { mockCallableReference.call(any()) } returns Tasks.forException(fakeException)
+    fun `getFeedback should propagate AiCoachException when network is unavailable`() = runTest {
+        coEvery { mockDataSource.fetchFeedback(any()) } throws AiCoachException.Unavailable
 
         var thrown: Exception? = null
         try {
@@ -225,7 +196,6 @@ class AiCoachRepositoryTest {
             thrown = e
         }
 
-        assertThat(thrown).isNotNull()
-        assertThat(thrown?.message).contains("UNAVAILABLE")
+        assertThat(thrown).isInstanceOf(AiCoachException.Unavailable::class.java)
     }
 }

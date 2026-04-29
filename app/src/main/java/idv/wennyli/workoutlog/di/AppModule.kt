@@ -12,8 +12,10 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import idv.wennyli.workoutlog.data.repository.AiCoachDataSource
 import idv.wennyli.workoutlog.data.repository.AiCoachRepository
 import idv.wennyli.workoutlog.data.repository.AiCoachRepositoryImpl
+import idv.wennyli.workoutlog.data.repository.FirebaseAiCoachDataSource
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepository
 import idv.wennyli.workoutlog.data.repository.BodyMeasurementRepositoryImpl
 import idv.wennyli.workoutlog.data.repository.ExerciseRepository
@@ -78,8 +80,13 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideAiCoachDataSource(functions: FirebaseFunctions): AiCoachDataSource =
+        FirebaseAiCoachDataSource(functions)
+
+    @Provides
+    @Singleton
     fun provideAiCoachRepository(
-        functions: FirebaseFunctions,
+        dataSource: AiCoachDataSource,
         @Named("appId") appId: String
-    ): AiCoachRepository = AiCoachRepositoryImpl(functions, appId)
+    ): AiCoachRepository = AiCoachRepositoryImpl(dataSource, appId)
 }

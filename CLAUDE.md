@@ -21,7 +21,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 所有程式碼修改必須直接在專案主目錄（`/Users/wenyi_li/AndroidStudioProjects/WorkoutLog`）進行，不可只修改 worktree（`.claude/worktrees/` 下的目錄）。若目前環境是在 worktree 內，請改以主目錄的絕對路徑操作檔案。
 
-## Build & Test Commands
+## 開發規範
+
+實作任何功能或邏輯後，須在 `app/src/test/` 中補上對應的 unit test。
+
+## Build Commands
 
 ```bash
 # Build debug APK
@@ -29,15 +33,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 # Install to connected device
 ./gradlew installDebug
-
-# Run unit tests
-./gradlew testDebugUnitTest
-
-# Run a single test class
-./gradlew testDebugUnitTest --tests "idv.wennyli.workoutlog.YourTestClass"
-
-# Run instrumented tests (requires device/emulator)
-./gradlew connectedAndroidTest
 
 # Lint
 ./gradlew lint
@@ -48,59 +43,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Architecture
 
-**MVVM + Hilt DI + Jetpack Compose**, targeting Android 7.0+ (minSdk 24).
+**MVVM + Hilt DI + Jetpack Compose**，targeting Android 7.0+ (minSdk 24)。
 
 ### Package Structure
 
 ```
 idv.wennyli.workoutlog/
 ├── data/
-│   └── model/       # Data classes (e.g. AiRecommendedExercise)
+│   ├── model/       # 資料類別（Workout、UserProfile、BodyMeasurement、AiCoachModels 等）
+│   └── repository/  # Repository 介面 + Impl，每個檔案同時定義 interface 和實作類別
+├── di/
+│   ├── AppModule.kt     # 提供 Firebase 實例、所有 Repository 綁定
+│   └── ConfigModule.kt  # 提供 @Named("appId")，值來自 BuildConfig.APP_ID
 ├── ui/
-│   ├── navigation/  # Navigation graphs (BottomNavGraph, etc.)
-│   ├── view/        # Feature screens, each with ViewModel + Composable
-│   └── theme/       # Material3 color, typography, theme
-└── utils/           # Shared utilities (DateUtils, etc.)
+│   ├── navigation/  # 導覽圖（Navigation.kt：頂層；BottomNavGraph.kt：底部 tab）
+│   ├── theme/       # Material3 主題
+│   └── view/        # 各功能頁面，每個子目錄含 Screen Composable + ViewModel
+└── utils/
+    ├── FirestorePaths.kt   # 集中管理所有 Firestore 路徑
+    └── ResourceProvider.kt # AppResource 介面，供 ViewModel 存取字串資源（可 mock）
 ```
 
 ### Key Tech Stack
 
 | Layer | Library |
 |-------|---------|
+| 語言 | Kotlin 2.3 / JVM 11 |
 | UI | Jetpack Compose + Material3 |
-| Navigation | Navigation Compose |
-| DI | Hilt (KSP) |
-| Backend | Firebase (Analytics; Firestore ready but commented out) |
-| Language | Kotlin 2.0 / JVM 11 |
-
-### Data Flow
-
-- ViewModels expose `StateFlow` / `UiState` consumed by Composable screens
-- Repositories abstract data sources (Firebase Firestore expected as the remote source)
-- Hilt provides constructor injection throughout; `WorkoutApplication` is the `@HiltAndroidApp` root
+| 架構 | MVVM |
+| 非同步 | Coroutines + Flow |
+| 依賴注入 | Hilt (KSP) |
+| 後端 | Firebase Auth / Firestore / Cloud Functions |
+| AI | Google Gemini API（透過 Cloud Functions 呼叫，API Key 由 Secret Manager 管理） |
+| 測試 | JUnit4 + MockK + Truth + Turbine |
 
 ### Dependency Versions
 
-Managed centrally in `gradle/libs.versions.toml`. Always update versions there, not inline in `build.gradle.kts`.
+統一在 `gradle/libs.versions.toml` 管理，不可在 `build.gradle.kts` 內直接寫版本號。
 
-## Testing Principles
-
-### Unit Test
-- **一個測試只驗證一件事**：失敗時能立刻定位問題
-- **AAA 結構**：Arrange（準備）→ Act（執行）→ Assert（驗證），三段間留空行
-- **測試名稱說明情境與預期結果**：用 backtick 包裹的描述句，如 `` `getFeedback should return empty list when warnings are absent` ``
-- **測試間彼此獨立**：用 `@Before` 重置狀態，執行順序不影響結果
-- **只測自己寫的邏輯**：用 mock 隔離 Firebase、網路等外部依賴
-- **涵蓋邊界條件**：正常輸入、空值/缺欄位、例外三種情境
-- **不為覆蓋率而寫**：測試邏輯行為，而非讓每一行程式碼都被執行過
-
-### UI Test（Instrumented）
-- 測試對象為 stateless composable（直接傳入 `uiState`），避免依賴 Hilt 或 ViewModel
-- 用 `createComposeRule` 渲染畫面，`onNodeWithText` 找元素，`assertIsDisplayed` / `assertDoesNotExist` 驗證顯示狀態
-- 互動測試用 `performClick()` 模擬點擊，搭配旗標變數驗證 callback 是否被呼叫
-- 需要 `@RunWith(AndroidJUnit4::class)`，執行指令：`./gradlew connectedAndroidTest`
-- **用使用者看到的文字找元素**：`onNodeWithText("取得 AI 回饋")`，不用內部 tag/ID
-- **只驗證使用者能感知的事**：畫面有沒有顯示、互動後有沒有變化，不驗證 ViewModel 內部狀態
-- **測試行為，不測樣式**：不驗證顏色、字體大小、間距等視覺細節
-- **優先測試有條件判斷的狀態切換**：如 Idle / Loading / Success / Error 各自應顯示與隱藏的元素
-- **非同步狀態變化**：若有 coroutine 驅動的畫面更新，用 `waitUntil` 等待節點出現，避免 race condition

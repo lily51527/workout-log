@@ -12,7 +12,13 @@
 
 ## 截圖
 
-> 截圖待補
+| 健身紀錄 | 新增記錄 | 組間計時器 |
+|:---:|:---:|:---:|
+| <img src="../screenshots/workout_log.png" width="200"/> | <img src="../screenshots/add_workout.png" width="200"/> | <img src="../screenshots/timer.png" width="200"/> |
+
+| AI 教練 | 設定 |
+|:---:|:---:|
+| <img src="../screenshots/ai_coach.png" width="200"/> | <img src="../screenshots/settings.png" width="200"/> |
 
 ---
 
